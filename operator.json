@@ -1,0 +1,10 @@
+{
+  "name": "Median",
+  "description": "Return the medium value of a cell",
+  "tags": ["basic statistics"],
+  "authors": ["tercen"],
+  "urls": ["https://github.com/tercen/template_operator"],
+  "properties": []
+}
+
+
