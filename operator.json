@@ -1,10 +1,17 @@
 {
-  "name": "Median",
-  "description": "Return the medium value of a cell",
-  "tags": ["basic statistics"],
+  "name": "FlowSOM",
+  "description": "Returns FlowSOM clusters",
+  "tags": ["flow cytometry"],
   "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/template_operator"],
-  "properties": []
+  "urls": ["https://github.com/tercen/flowsom_operator"],
+  "properties": [
+   {
+    "kind": "DoubleProperty",
+    "name": "nclust",
+    "defaultValue": 10,
+    "description": "number of clusters"
+  }
+  ]
 }
 
 
