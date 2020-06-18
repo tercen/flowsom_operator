@@ -11,10 +11,10 @@ getOption("tercen.stepId")
 
 get_FlowSOM_Clusters <- function(data) {
   colnames(data) <- ctx$rselect()[[1]]
-  dat <- flowCore::flowFrame(as.matrix(data))
+  flow.dat <- flowCore::flowFrame(as.matrix(data))
   fsom <- FlowSOM(
-    dat,
-    colsToUse = 1:ncol(dat),
+    flow.dat,
+    colsToUse = 1:ncol(flow.dat),
     nClus = 20,
     seed = 1
   )

@@ -10,7 +10,7 @@ get_FlowSOM_Clusters <- function(data) {
   flow.dat <- flowCore::flowFrame(as.matrix(data))
   
   fsom <- FlowSOM(
-    dat,
+    flow.dat,
     colsToUse = 1:ncol(flow.dat),
     nClus = as.integer(ctx$op.value('nclust')),
     seed = 1
