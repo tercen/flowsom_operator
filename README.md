@@ -1,25 +1,42 @@
 # FlowSOM operator
 
 ##### Description
-`Median` operator returns the median of a set of data points.
+
+`FlowSOM` operator for flow cytometry data.
 
 ##### Usage
 
 Input projection|.
 ---|---
-`y-axis`        | numeric, input data, per cell 
+`row`   | represents the variables (e.g. channels, markers)
+`col`   | represents the clusters (e.g. cells) 
+`y-axis`| is the value of measurement signal of the channel/marker
+
+Input parameters|.
+---|---
+`nclust`   | Number of clusters to make
+`xdim`   | Width of the grid
+`ydim`   | Hight of the grid
+`rlen`| Number of times to loop over the training data for each MST
+`mst`| Number of times to build an MST
+`alpha_start`| Start learning rate
+`alpha_end`|  End learning rate
+`dstf`| Distance function (1=manhattan, 2=euclidean, 3=chebyshev, 4=cosine)
 
 Output relations|.
 ---|---
-`median`        | numeric, median of the input data
+`cluster`| character, cluster label
 
 ##### Details
-The operator takes all the values of a cell and returns the value which is the median.The computation is done per cell. There is one value returned for each of the input cell.
+
+The operator is a wrapper for the `FlowSOM` function of the `FlowSOM` R/Bioconductor package.
 
 #### References
 
+https://bioconductor.org/packages/FlowSOM/
 
 ##### See Also
 
-[mean_operator](https://github.com/tercen/mean_operator)
-#### Examples
+[flowsom_operator](https://github.com/tercen/flowsom_operator)
+
+[flowsom_mst_shiny_operator](https://github.com/tercen/flowsom_mst_shiny_operator)
