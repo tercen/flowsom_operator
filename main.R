@@ -16,6 +16,7 @@ get_FlowSOM_Clusters <- function(data) {
     flow.dat,
     colsToUse = 1:ncol(flow.dat),
     nClus = n.clust,
+    maxMeta = as.integer(ctx$op.value('maxMeta')),
     seed = as.integer(ctx$op.value('seed')),
     xdim   = as.integer(ctx$op.value('xdim')),
     ydim   = as.integer(ctx$op.value('ydim')), 

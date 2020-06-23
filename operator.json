@@ -13,6 +13,12 @@
   },
   {
     "kind": "DoubleProperty",
+    "name": "maxMeta",
+    "defaultValue": 10,
+    "description": "Maximal number of clusters"
+  },
+  {
+    "kind": "DoubleProperty",
     "name": "seed",
     "defaultValue": 42,
     "description": "random seed"

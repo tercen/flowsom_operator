@@ -15,6 +15,7 @@ Input projection|.
 Input parameters|.
 ---|---
 `nclust`   | Number of clusters to make (default = `NULL`)
+`maxMeta`   | Maximal number of cluster (ignored if `nclust` is not `NULL`)
 `seed`   | Random seed
 `xdim`   | Width of the grid
 `ydim`   | Hight of the grid
