@@ -15,7 +15,7 @@ get_FlowSOM_Clusters <- function(data) {
   fsom <- FlowSOM(
     flow.dat,
     colsToUse = 1:ncol(flow.dat),
-    nClus = 20,
+    nClus = NULL,
     seed = 1
   )
   cluster <- data.frame(cluster=as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]))

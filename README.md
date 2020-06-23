@@ -14,7 +14,8 @@ Input projection|.
 
 Input parameters|.
 ---|---
-`nclust`   | Number of clusters to make
+`nclust`   | Number of clusters to make (default = `NULL`)
+`seed`   | Random seed
 `xdim`   | Width of the grid
 `ydim`   | Hight of the grid
 `rlen`| Number of times to loop over the training data for each MST
