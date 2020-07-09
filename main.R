@@ -12,12 +12,15 @@ get_FlowSOM_Clusters <- function(data) {
   n.clust <- NULL
   if(!ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
   
+  seed <- NULL
+  if(!ctx$op.value('seed') == "NULL") seed <- as.integer(ctx$op.value('seed'))
+  
   fsom <- FlowSOM(
     flow.dat,
     colsToUse = 1:ncol(flow.dat),
     nClus = n.clust,
     maxMeta = as.integer(ctx$op.value('maxMeta')),
-    seed = as.integer(ctx$op.value('seed')),
+    seed = seed,
     xdim   = as.integer(ctx$op.value('xdim')),
     ydim   = as.integer(ctx$op.value('ydim')), 
     rlen   = as.integer(ctx$op.value('rlen')), 
