@@ -18,9 +18,9 @@
     "description": "Maximal number of clusters"
   },
   {
-    "kind": "DoubleProperty",
+    "kind": "StringProperty",
     "name": "seed",
-    "defaultValue": 42,
+    "defaultValue": "NULL",
     "description": "random seed"
   },
   {
