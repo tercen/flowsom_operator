@@ -1,6 +1,6 @@
 {
   "name": "FlowSOM",
-  "description": "Returns FlowSOM clusters",
+  "description": "Flow Cytometry Self Organising Maps: An algorithm that clusters cells based on chosen channels and maps them into populations.",
   "tags": ["flow cytometry"],
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/flowsom_operator"],
