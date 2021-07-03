@@ -61,8 +61,8 @@ get_FlowSOM_Clusters <- function(data) {
     distf = distf
   )
   
-  wf_id <- getOption("tercen.workflowId")
-  fname <- paste0("FlowSOM_model_", getOption("tercen.stepId"))
+  wf_id <- ctx$workflowId
+  fname <- paste0("FlowSOM_model_", ctx$stepId)
   model_documentId <- save_rds(fsom, fname, wf_id)
   df_out <- data.frame(
     cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
