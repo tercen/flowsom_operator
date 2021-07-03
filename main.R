@@ -18,7 +18,7 @@ save_rds <- function(object, filename, workflowId) {
   return(fileDoc$id)
 }
 
-get_FlowSOM_Clusters <- function(data) {
+get_FlowSOM_Clusters <- function(data, wf_id, st_id) {
   colnames(data) <- ctx$rselect()[[1]]
   
   flow.dat <- flowCore::flowFrame(as.matrix(data))
@@ -55,8 +55,7 @@ get_FlowSOM_Clusters <- function(data) {
     distf = distf
   )
   
-  wf_id <- ctx$workflowId
-  fname <- paste0("FlowSOM_model_", ctx$stepId)
+  fname <- paste0("FlowSOM_model_", st_id)
   model_documentId <- save_rds(fsom, fname, wf_id)
   df_out <- data.frame(
     cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
@@ -70,9 +69,10 @@ ctx <- tercenCtx()
 ctx %>% 
   as.matrix() %>%
   t() %>%
-  get_FlowSOM_Clusters() %>%
+  get_FlowSOM_Clusters(., ctx$workflowId, ctx$stepId) %>%
   as_tibble() %>%
   mutate(.ci = seq_len(nrow(.))-1) %>%
   ctx$addNamespace() %>%
   ctx$save()
+
 
