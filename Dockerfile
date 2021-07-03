@@ -1,4 +1,4 @@
-IMAGE=tercen/runtime-r40:4.0.4-1
+FROM tercen/runtime-r40:4.0.4-1
 
 USER root
 WORKDIR /operator
