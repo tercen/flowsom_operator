@@ -21,17 +21,18 @@ save_rds <- function(object, filename, ctx) {
   
   metaWorkflowId = Pair$new()
   metaWorkflowId$key = 'workflow.id'
-  metaWorkflowId$value = workflowId
+  metaWorkflowId$value = ctx$workflowId
   
   metaStepId = Pair$new()
   metaStepId$key = 'step.id'
-  metaStepId$value = stepId
+  metaStepId$value = ctx$stepId
   
   fileDoc$meta = list(metaWorkflowId, metaStepId)
   
   con = rawConnection(raw(0), "r+")
   saveRDS(object, file=con)
   bytes = rawConnectionValue(con)
+  
   fileDoc = ctx$client$fileService$upload(fileDoc, bytes)
   return(fileDoc$id)
 }
@@ -46,7 +47,7 @@ get_FlowSOM_Clusters <- function(data, ctx) {
   
   seed <- NULL
   if(!is.null(ctx$op.value('seed')) && !ctx$op.value('seed') == "NULL") seed <- as.integer(ctx$op.value('seed'))
-
+  
   xdim   = ifelse(is.null(ctx$op.value('xdim')), 10, as.integer(ctx$op.value('xdim')))
   ydim   = ifelse(is.null(ctx$op.value('ydim')), 10, as.integer(ctx$op.value('ydim')))
   rlen   = ifelse(is.null(ctx$op.value('rlen')), 10, as.integer(ctx$op.value('rlen')))
