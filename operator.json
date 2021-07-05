@@ -4,7 +4,7 @@
   "tags": ["flow cytometry"],
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/flowsom_operator"],
-  "container": "tercen/flowsom:0.1.6",
+  "container": "tercen/flowsom:0.1.7",
   "properties": [
    {
     "kind": "StringProperty",

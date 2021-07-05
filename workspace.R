@@ -9,22 +9,34 @@ options("tercen.stepId"     = "ab7dbc25-6647-4481-84e1-c169bcd24a3b")
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
 
-save_rds <- function(object, filename, workflowId) {
-  client <- TercenClient$new()
-  wf <- client$workflowService$get(workflowId)
-  project <- client$projectService$get(id = wf$projectId)
-  fileDoc <- FileDocument$new()
+save_rds <- function(object, filename, ctx) {
+  
+  wf <- ctx$client$workflowService$get(ctx$workflowId)
+  
+  fileDoc = FileDocument$new()
   fileDoc$name = filename
-  fileDoc$projectId = project$id
-  fileDoc$acl$owner = project$acl$owner
+  fileDoc$projectId = workflow$projectId
+  fileDoc$acl$owner = workflow$acl$owner
+  fileDoc$metadata$contentType = 'application/octet-stream'
+  
+  metaWorkflowId = Pair$new()
+  metaWorkflowId$key = 'workflow.id'
+  metaWorkflowId$value = workflowId
+  
+  metaStepId = Pair$new()
+  metaStepId$key = 'step.id'
+  metaStepId$value = stepId
+  
+  fileDoc$meta = list(metaWorkflowId, metaStepId)
+  
   con = rawConnection(raw(0), "r+")
   saveRDS(object, file=con)
   bytes = rawConnectionValue(con)
-  fileDoc = client$fileService$upload(fileDoc, bytes)
+  fileDoc = ctx$client$fileService$upload(fileDoc, bytes)
   return(fileDoc$id)
 }
 
-get_FlowSOM_Clusters <- function(data, wf_id, st_id) {
+get_FlowSOM_Clusters <- function(data, ctx) {
   colnames(data) <- ctx$rselect()[[1]]
   
   flow.dat <- flowCore::flowFrame(as.matrix(data))
@@ -61,8 +73,8 @@ get_FlowSOM_Clusters <- function(data, wf_id, st_id) {
     distf = distf
   )
   
-  fname <- paste0("FlowSOM_model_", st_id)
-  model_documentId <- save_rds(fsom, fname, wf_id)
+  fname <- paste0("FlowSOM_model_", ctx$stepId)
+  model_documentId <- save_rds(fsom, fname, ctx)
   df_out <- data.frame(
     cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
     model_documentId = model_documentId
@@ -75,7 +87,7 @@ ctx <- tercenCtx()
 ctx %>% 
   as.matrix() %>%
   t() %>%
-  get_FlowSOM_Clusters(., ctx$workflowId, ctx$stepId) %>%
+  get_FlowSOM_Clusters(., ctx) %>%
   as_tibble() %>%
   mutate(.ci = seq_len(nrow(.))-1) %>%
   ctx$addNamespace() %>%
