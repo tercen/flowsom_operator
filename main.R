@@ -5,7 +5,7 @@ library(FlowSOM)
 
 save_rds <- function(object, filename, ctx) {
   
-  wf <- ctx$client$workflowService$get(ctx$workflowId)
+  workflow <- ctx$client$workflowService$get(ctx$workflowId)
   
   fileDoc = FileDocument$new()
   fileDoc$name = filename
