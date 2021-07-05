@@ -5,7 +5,9 @@ library(FlowSOM)
 
 save_rds <- function(object, filename, ctx) {
   
-  workflow <- ctx$client$workflowService$get(ctx$workflowId)
+  workflowId <- getOption("tercen.workflowId") #ctx$workflowId
+  stepId <- getOption("tercen.stepId") #ctx$stepId
+  workflow <- ctx$client$workflowService$get(workflowId)
   
   fileDoc = FileDocument$new()
   fileDoc$name = filename
@@ -15,16 +17,16 @@ save_rds <- function(object, filename, ctx) {
   
   metaWorkflowId = Pair$new()
   metaWorkflowId$key = 'workflow.id'
-  metaWorkflowId$value = ctx$workflowId
+  metaWorkflowId$value = workflowId
   
   metaStepId = Pair$new()
   metaStepId$key = 'step.id'
-  metaStepId$value = ctx$stepId
+  metaStepId$value = stepId
   
   fileDoc$meta = list(metaWorkflowId, metaStepId)
   
   con = rawConnection(raw(0), "r+")
-  saveRDS(object, file=con)
+  saveRDS(object, file = con)
   bytes = rawConnectionValue(con)
   
   fileDoc = ctx$client$fileService$upload(fileDoc, bytes)
@@ -68,7 +70,7 @@ get_FlowSOM_Clusters <- function(data, ctx) {
     distf = distf
   )
   
-  fname <- paste0("FlowSOM_model_", ctx$stepId)
+  fname <- paste0("FlowSOM_model")
   model_documentId <- save_rds(fsom, fname, ctx)
   df_out <- data.frame(
     cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
