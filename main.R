@@ -77,7 +77,7 @@ serialize_rds <- function(df_left, my_object, my_object_name) {
   # the factor used in the join relation MUST have a different name then the one used in the leftTable 
   rightTable = data.frame(
     model=my_object_name,
-    .base64.serialized.r.model=c(serialize.to.string(my_object)))  %>%
+    .base64.serialized.r.model=c(serialize.to.string(my_object))) %>%
     ctx$addNamespace()  %>%
     tercen::dataframe.as.table()
   

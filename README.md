@@ -28,6 +28,7 @@ Input parameters|.
 Output relations|.
 ---|---
 `cluster`| character, cluster label
+`model`| character, name of the flowSOM model (to be used with other operators)
 
 ##### Details
 
