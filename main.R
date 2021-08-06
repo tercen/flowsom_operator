@@ -3,36 +3,6 @@ library(dplyr)
 library(flowCore)
 library(FlowSOM)
 
-save_rds <- function(object, filename, ctx) {
-  
-  workflowId <- getOption("tercen.workflowId") #ctx$workflowId
-  stepId <- getOption("tercen.stepId") #ctx$stepId
-  workflow <- ctx$client$workflowService$get(workflowId)
-  
-  fileDoc = FileDocument$new()
-  fileDoc$name = filename
-  fileDoc$projectId = workflow$projectId
-  fileDoc$acl$owner = workflow$acl$owner
-  fileDoc$metadata$contentType = 'application/octet-stream'
-  
-  metaWorkflowId = Pair$new()
-  metaWorkflowId$key = 'workflow.id'
-  metaWorkflowId$value = workflowId
-  
-  metaStepId = Pair$new()
-  metaStepId$key = 'step.id'
-  metaStepId$value = stepId
-  
-  fileDoc$meta = list(metaWorkflowId, metaStepId)
-  
-  con = rawConnection(raw(0), "r+")
-  saveRDS(object, file = con)
-  bytes = rawConnectionValue(con)
-  
-  fileDoc = ctx$client$fileService$upload(fileDoc, bytes)
-  return(fileDoc$id)
-}
-
 get_FlowSOM_Clusters <- function(data, ctx) {
   colnames(data) <- ctx$rselect()[[1]]
   
@@ -69,24 +39,95 @@ get_FlowSOM_Clusters <- function(data, ctx) {
     alpha = alpha,
     distf = distf
   )
-  
-  fname <- paste0("FlowSOM_model")
-  model_documentId <- save_rds(fsom, fname, ctx)
+
   df_out <- data.frame(
-    cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]]),
-    model_documentId = model_documentId
+    cluster_id = as.character(fsom[[2]][fsom[[1]]$map$mapping[, 1]])
   )
-  return(df_out)
+  return(list(df_out, fsom))
+}
+
+# here the key for the join start by "." (.model) so it wont be displayed to the user
+serialize.to.string = function(object){
+  con = rawConnection(raw(0), "r+")
+  saveRDS(object, con)
+  str64 = base64enc::base64encode(rawConnectionValue(con))
+  close(con)
+  return(str64)
+}
+
+deserialize.from.string = function(str64){
+  con = rawConnection(base64enc::base64decode(str64), "r+")
+  object = readRDS(con)
+  close(con)
+  return(object)
+}
+
+serialize_rds <- function(df_left, my_object, my_object_name) {
+  df_left$.model <- my_object_name
+  leftTable = data.frame(df_left)  %>%
+    ctx$addNamespace()  %>%
+    tercen::dataframe.as.table()
+  leftTable$properties$name = 'left'
+  leftTable
+  
+  leftRelation = SimpleRelation$new()
+  leftRelation$id = leftTable$properties$name
+  
+  # the factor where the binary data base64 encoded is stored MUST start by a "." character so it wont be displayed to the user
+  # the factor used in the join relation MUST have a different name then the one used in the leftTable 
+  rightTable = data.frame(
+    model=my_object_name,
+    .base64.serialized.r.model=c(serialize.to.string(my_object)))  %>%
+    ctx$addNamespace()  %>%
+    tercen::dataframe.as.table()
+  
+  rightTable$properties$name = 'right'
+  rightRelation = SimpleRelation$new()
+  rightRelation$id = rightTable$properties$name
+  
+  pair = ColumnPair$new()
+  pair$lColumns = list(".model") # column name of the leftTable to use for the join 
+  pair$rColumns = list(rightTable$columns[[1]]$name) # column name of the rightTable to use for the join (note : namespace has been added) 
+  # pair
+  
+  join.model = JoinOperator$new()
+  join.model$rightRelation = rightRelation
+  join.model$leftPair = pair
+  # join.model
+  
+  # create the join relationship using a composite relation (think at a start schema)
+  
+  compositeRelation = CompositeRelation$new()
+  compositeRelation$id = "compositeRelation"
+  compositeRelation$mainRelation = leftRelation
+  compositeRelation$joinOperators = list(join.model)
+  # compositeRelation
+  
+  # finally return a JoinOperator to tercen with the composite relation
+  join = JoinOperator$new()
+  join$rightRelation = compositeRelation
+  # join
+  
+  result = OperatorResult$new()
+  result$tables = list(leftTable, rightTable)
+  result$joinOperators = list(join)
+  # result
+  
+  ctx$save(result)
+  return(NULL)
 }
 
 ctx <- tercenCtx()
 
-ctx %>% 
+results <- ctx %>% 
   as.matrix() %>%
   t() %>%
-  get_FlowSOM_Clusters(., ctx) %>%
+  get_FlowSOM_Clusters(., ctx)
+
+df_out <- results[[1]] %>%
   as_tibble() %>%
-  mutate(.ci = seq_len(nrow(.))-1) %>%
-  ctx$addNamespace() %>%
-  ctx$save()
+  mutate(.ci = seq_len(nrow(.)) - 1)
+
+model <- results[[2]]
+serialize_rds(df_left = df_out, my_object = model, my_object_name = "flowsom_model")
 
