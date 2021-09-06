@@ -2,7 +2,7 @@
 
 ##### Description
 
-`FlowSOM` operator for flow cytometry data.
+Flow Cytometry Self Organising Maps `FlowSOM`: An algorithm that clusters cells based on chosen channels and maps them into populations.
 
 ##### Usage
 
