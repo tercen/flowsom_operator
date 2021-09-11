@@ -1,12 +1,13 @@
 library(tercen)
 library(dplyr)
 library(flowCore)
+# remotes::install_github("saeyslab/FlowSOM")
 library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
 
 options("tercen.workflowId" = "e9482bf86b951d32f9ff44a499015119")
-options("tercen.stepId"     = "ab7dbc25-6647-4481-84e1-c169bcd24a3b")
+options("tercen.stepId"     = "644f92ec-8807-435e-b6b5-d6045440913c")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
@@ -47,9 +48,9 @@ get_FlowSOM_Clusters <- function(data, ctx) {
     alpha = alpha,
     distf = distf
   )
-  
+  fsom$data <- NULL
   df_out <- data.frame(
-    cluster_id = as.character(fsom$metaclustering)
+    cluster_id = as.character(fsom$metaclustering[GetClusters(fsom)])
   )
   return(list(df_out, fsom))
 }
@@ -66,6 +67,10 @@ df_out <- results[[1]] %>%
   mutate(.ci = seq_len(nrow(.)) - 1)
 
 model <- results[[2]]
-res <- get_serialized_result(df = df_out, object = model, object_name = "flowsom_model", ctx = ctx)
+res <- get_serialized_result(
+  df = df_out,
+  object = model,
+  object_name = "flowsom_model", ctx = ctx
+)
 
 ctx$save(res)

@@ -4,7 +4,6 @@
   "tags": ["flow cytometry", "clustering"],
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/flowsom_operator"],
-  "container": "tercen/flowsom:0.1.10",
   "properties": [
    {
     "kind": "StringProperty",
