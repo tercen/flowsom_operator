@@ -32,14 +32,8 @@ Output relations|.
 
 ##### Details
 
-The operator is a wrapper for the `FlowSOM` function of the `FlowSOM` R/Bioconductor package.
-
-#### References
-
-https://bioconductor.org/packages/FlowSOM/
+The operator is a wrapper for the `FlowSOM` function of the `FlowSOM` [R/Bioconductor package](https://bioconductor.org/packages/FlowSOM/).
 
 ##### See Also
-
-[flowsom_operator](https://github.com/tercen/flowsom_operator)
 
 [flowsom_mst_shiny_operator](https://github.com/tercen/flowsom_mst_shiny_operator)
