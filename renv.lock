@@ -1207,6 +1207,18 @@
       "Repository": "RSPM",
       "Hash": "6ea435c354e8448819627cf686f66e0a"
     },
+    "tim": {
+      "Package": "tim",
+      "Version": "0.0.1",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "tim",
+      "RemoteUsername": "tercen",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "d51c61cd48d0b060ecde04452f179114054b0672",
+      "Hash": "e04bd25781c31b69b98c1059c18eee26"
+    },
     "tmvnsim": {
       "Package": "tmvnsim",
       "Version": "1.0-2",
