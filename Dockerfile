@@ -10,8 +10,8 @@ RUN git clone https://github.com/tercen/flowsom_operator.git
 
 WORKDIR /operator/flowsom_operator
 
-RUN echo 0.1.12 && git pull
-RUN git checkout 0.1.12
+RUN echo 0.1.14 && git pull
+RUN git checkout 0.1.14
 
 RUN R -e "renv::restore(confirm=FALSE)"
 
