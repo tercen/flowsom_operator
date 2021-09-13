@@ -2,7 +2,7 @@
   "name": "FlowSOM",
   "description": "Flow Cytometry Self Organising Maps: An algorithm that clusters cells based on chosen channels and maps them into populations.",
   "tags": ["flow cytometry", "clustering"],
-  "container": "tercen/flowsom:0.2.1",
+  "container": "tercen/flowsom:0.2.2",
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/flowsom_operator"],
   "properties": [
@@ -16,7 +16,7 @@
     "kind": "StringProperty",
     "name": "maxMeta",
     "defaultValue": "NULL",
-    "description": "Maximal number of clusters (if specified, nclust is ignored)"
+    "description": "Maximal number of clusters (if specified, nclust is ignored). If both nclust and masMeta are NULL, maxMeta is set to 10."
   },
   {
     "kind": "StringProperty",
