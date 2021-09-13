@@ -1,22 +1,11 @@
-FROM tercen/runtime-r40:4.0.4-1
+FROM tercen/flowsom:0.1.14
 
 USER root
-WORKDIR /operator
-
-RUN apt-get update
-RUN apt-get install -y tk
-
-RUN git clone https://github.com/tercen/flowsom_operator.git
-
 WORKDIR /operator/flowsom_operator
 
-RUN echo 0.1.14 && git pull
-RUN git checkout 0.1.14
-
-RUN R -e "renv::restore(confirm=FALSE)"
-
-RUN echo 0.2.0 && git pull
-RUN git checkout 0.2.0
+RUN git checkout master
+RUN echo 0.2.1 && git pull
+RUN git checkout 0.2.1
 
 ENV TERCEN_SERVICE_URI https://tercen.com
 
