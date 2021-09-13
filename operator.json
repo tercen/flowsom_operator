@@ -2,7 +2,7 @@
   "name": "FlowSOM",
   "description": "Flow Cytometry Self Organising Maps: An algorithm that clusters cells based on chosen channels and maps them into populations.",
   "tags": ["flow cytometry", "clustering"],
-  "container": "tercen/flowsom:0.1.14",
+  "container": "tercen/flowsom:0.2.0",
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/flowsom_operator"],
   "properties": [
@@ -10,61 +10,61 @@
     "kind": "StringProperty",
     "name": "nclust",
     "defaultValue": "NULL",
-    "description": "number of clusters"
+    "description": "Number of clusters to infer"
   },
   {
-    "kind": "DoubleProperty",
+    "kind": "StringProperty",
     "name": "maxMeta",
-    "defaultValue": 10,
-    "description": "Maximal number of clusters"
+    "defaultValue": "NULL",
+    "description": "Maximal number of clusters (if specified, nclust is ignored)"
   },
   {
     "kind": "StringProperty",
     "name": "seed",
     "defaultValue": "NULL",
-    "description": "random seed"
+    "description": "Random seed"
   },
   {
     "kind": "DoubleProperty",
     "name": "xdim",
     "defaultValue": 10,
-    "description": "size of x dim for the som grid"
+    "description": "Size of x dim for the SOM grid"
   },
    {
     "kind": "DoubleProperty",
     "name": "ydim",
     "defaultValue": 10,
-    "description": "size of y dim for the som grid"
+    "description": "Size of y dim for the SOM grid"
   },
   {
     "kind": "DoubleProperty",
     "name": "rlen",
     "defaultValue": 10,
-    "description": "size of rlen"
+    "description": "Size of rlen"
   },
    {
     "kind": "DoubleProperty",
     "name": "mst",
     "defaultValue": 1,
-    "description": "amount of training"
+    "description": "Amount of training"
   },
    {
     "kind": "DoubleProperty",
     "name": "alpha_1",
     "defaultValue": 0.05,
-    "description": "alpha setting"
+    "description": "Alpha1 setting"
   },
    {
     "kind": "DoubleProperty",
     "name": "alpha_2",
     "defaultValue": 0.01,
-    "description": "alpha setting"
+    "description": "Alpha2 setting"
   },
  {
     "kind": "DoubleProperty",
     "name": "distf",
     "defaultValue": 2,
-    "description": "distance setting"
+    "description": "Distance setting"
   }
   ]
 }

@@ -26,8 +26,10 @@ get_FlowSOM_Clusters <- function(data, ctx) {
     ifelse(is.null(ctx$op.value('alpha_2')), 0.01, as.double(ctx$op.value('alpha_2')))
   )
   distf  = ifelse(is.null(ctx$op.value('distf')), 2, as.integer(ctx$op.value('distf')))
-  maxMeta  = ifelse(is.null(ctx$op.value('maxMeta')), 10, as.integer(ctx$op.value('maxMeta')))
-  
+
+  maxMeta <- NULL
+  if(!is.null(ctx$op.value('maxMeta')) && !ctx$op.value('maxMeta') == "NULL") n.clust <- as.integer(ctx$op.value('maxMeta'))
+
   fsom <- FlowSOM(
     input = flow.dat,
     compensate = FALSE,
