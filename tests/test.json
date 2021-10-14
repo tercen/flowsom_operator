@@ -1,0 +1,20 @@
+{
+  "kind": "OperatorUnitTest",
+  "name": "flowSOM",
+  "namespace": "test",
+  "propertyValues": [
+    {
+    "kind": "PropertyValue",
+    "name": "seed",
+    "value": "42"
+  }
+  ], 
+  "inputDataUri": "simple_exp.tsv",
+  "outputDataUri": ["table1.csv","table2.csv"],
+  "columns": ["Observation"],
+  "rows": ["Group"],
+  "colors": [],
+  "labels": [],
+  "yAxis": "Measurement",
+  "xAxis": "Measurement"
+}
