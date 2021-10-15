@@ -6,6 +6,7 @@ library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
 
+
 get_FlowSOM_Clusters <- function(data, ctx) {
   colnames(data) <- ctx$rselect()[[1]]
   
@@ -26,10 +27,10 @@ get_FlowSOM_Clusters <- function(data, ctx) {
     ifelse(is.null(ctx$op.value('alpha_2')), 0.01, as.double(ctx$op.value('alpha_2')))
   )
   distf  = ifelse(is.null(ctx$op.value('distf')), 2, as.integer(ctx$op.value('distf')))
-
+  
   maxMeta <- NULL
   if(!is.null(ctx$op.value('maxMeta')) && !ctx$op.value('maxMeta') == "NULL") maxMeta <- as.integer(ctx$op.value('maxMeta'))
-
+  
   if(is.null(maxMeta) & is.null(n.clust)) maxMeta <- 10
   
   fsom <- FlowSOM(
@@ -50,7 +51,6 @@ get_FlowSOM_Clusters <- function(data, ctx) {
   cluster_num = fsom$metaclustering[GetClusters(fsom)]
   df_out <- data.frame(
     cluster_id = sprintf(paste0("c%0", nchar(as.character(cluster_num)), "d"), cluster_num)
-    #test
     #cluster_id = as.character(fsom$metaclustering[GetClusters(fsom)])
   )
   return(list(df_out, fsom))
