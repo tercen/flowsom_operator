@@ -6,11 +6,13 @@ library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
 
-options("tercen.workflowId" = "e9482bf86b951d32f9ff44a499015119")
-options("tercen.stepId"     = "644f92ec-8807-435e-b6b5-d6045440913c")
+
+options("tercen.workflowId" = "32686b39f178f64eef1bbd38446f6fe0")
+options("tercen.stepId"     = "592adcb8-7faa-4618-88b6-2f28487cb643")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
+ctx <- tercenCtx()
 
 get_FlowSOM_Clusters <- function(data, ctx) {
   colnames(data) <- ctx$rselect()[[1]]
@@ -53,8 +55,10 @@ get_FlowSOM_Clusters <- function(data, ctx) {
     distf = distf
   )
   fsom$data <- NULL
+  cluster_num = fsom$metaclustering[GetClusters(fsom)]
   df_out <- data.frame(
-    cluster_id = as.character(fsom$metaclustering[GetClusters(fsom)])
+    cluster_id = sprintf(paste0("c%0", nchar(as.character(cluster_num)), "d"), cluster_num)
+    #cluster_id = as.character(fsom$metaclustering[GetClusters(fsom)])
   )
   return(list(df_out, fsom))
 }
