@@ -12,9 +12,9 @@
   "inputDataUri": "groups_series_measurement2_exp.tsv",
   "outputDataUri": ["table1.csv","table2.csv"],
   "columns": ["Observation"],
-  "rows": ["Group"],
+  "rows": ["Variable"],
   "colors": [],
   "labels": [],
   "yAxis": "Measurement",
-  "xAxis": "Measurement"
+  "xAxis": ""
 }
