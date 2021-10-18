@@ -6,13 +6,12 @@ library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
 
-
 options("tercen.workflowId" = "32686b39f178f64eef1bbd38446f6fe0")
 options("tercen.stepId"     = "592adcb8-7faa-4618-88b6-2f28487cb643")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
-ctx <- tercenCtx()
+
 
 get_FlowSOM_Clusters <- function(data, ctx) {
   colnames(data) <- ctx$rselect()[[1]]
