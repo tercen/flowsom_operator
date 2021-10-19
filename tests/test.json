@@ -5,6 +5,11 @@
   "propertyValues": [
     {
     "kind": "PropertyValue",
+    "name": "nclust",
+    "value": "4"
+    },
+    {
+    "kind": "PropertyValue",
     "name": "seed",
     "value": "42"
   }
