@@ -7,16 +7,10 @@ library(FlowSOM)
 library(tim)
 
 
-get_FlowSOM_Clusters <- function(data, ctx) {
+get_FlowSOM_Clusters <- function(data, ctx,n.clust, seed) {
   colnames(data) <- ctx$rselect()[[1]]
   
   flow.dat <- flowCore::flowFrame(as.matrix(data))
-  
-  n.clust <- NULL
-  if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
-  
-  seed <- NULL
-  if(!is.null(ctx$op.value('seed')) && !ctx$op.value('seed') == "NULL") seed <- as.integer(ctx$op.value('seed'))
   
   xdim   = ifelse(is.null(ctx$op.value('xdim')), 10, as.integer(ctx$op.value('xdim')))
   ydim   = ifelse(is.null(ctx$op.value('ydim')), 10, as.integer(ctx$op.value('ydim')))
