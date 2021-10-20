@@ -58,10 +58,18 @@ get_FlowSOM_Clusters <- function(data, ctx) {
 
 ctx <- tercenCtx()
 
+seed <- NULL
+if(!ctx$op.value('seed') < 0) seed <- as.integer(ctx$op.value('seed'))
+
+set.seed(seed)
+
+nclust <- NULL
+if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") nclust <- as.integer(ctx$op.value('nclust'))
+
 results <- ctx %>% 
   as.matrix() %>%
   t() %>%
-  get_FlowSOM_Clusters(., ctx)
+  get_FlowSOM_Clusters(., ctx, nclust, seed)
 
 df_out <- results[[1]] %>%
   as_tibble() %>%

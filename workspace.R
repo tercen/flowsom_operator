@@ -6,23 +6,17 @@ library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
 
-options("tercen.workflowId" = "32686b39f178f64eef1bbd38446f6fe0")
-options("tercen.stepId"     = "592adcb8-7faa-4618-88b6-2f28487cb643")
+options("tercen.workflowId" = "356f9d7215940b3876274878df01d649")
+options("tercen.stepId"     = "1efc7787-c913-41ff-954e-0af3eddedbad")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
 
 
-get_FlowSOM_Clusters <- function(data, ctx) {
+get_FlowSOM_Clusters <- function(data, ctx, n.clust, seed) {
   colnames(data) <- ctx$rselect()[[1]]
   
   flow.dat <- flowCore::flowFrame(as.matrix(data))
-  
-  n.clust <- NULL
-  if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
-  
-  seed <- NULL
-  if(!is.null(ctx$op.value('seed')) && !ctx$op.value('seed') == "NULL") seed <- as.integer(ctx$op.value('seed'))
   
   xdim   = ifelse(is.null(ctx$op.value('xdim')), 10, as.integer(ctx$op.value('xdim')))
   ydim   = ifelse(is.null(ctx$op.value('ydim')), 10, as.integer(ctx$op.value('ydim')))
@@ -64,10 +58,21 @@ get_FlowSOM_Clusters <- function(data, ctx) {
 
 ctx <- tercenCtx()
 
+seed <- NULL
+seed <- 42
+
+#if(!ctx$op.value('seed') < 0) seed <- as.integer(ctx$op.value('seed'))
+
+#set.seed(seed)
+
+nclust <- NULL
+nclust<-4
+#if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") nclust <- as.integer(ctx$op.value('nclust'))
+
 results <- ctx %>% 
   as.matrix() %>%
   t() %>%
-  get_FlowSOM_Clusters(., ctx)
+  get_FlowSOM_Clusters(., ctx, nclust, seed)
 
 df_out <- results[[1]] %>%
   as_tibble() %>%

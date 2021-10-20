@@ -19,10 +19,10 @@
     "description": "Maximal number of clusters (if specified, nclust is ignored). If both nclust and masMeta are NULL, maxMeta is set to 10."
   },
   {
-    "kind": "StringProperty",
+    "kind": "DoubleProperty",
     "name": "seed",
-    "defaultValue": "NULL",
-    "description": "Random seed"
+    "defaultValue": -1,
+    "description": "Seed for random number generation. if less than 0, set a Random seed"
   },
   {
     "kind": "DoubleProperty",
@@ -30,7 +30,7 @@
     "defaultValue": 10,
     "description": "Size of x dim for the SOM grid"
   },
-   {
+  {
     "kind": "DoubleProperty",
     "name": "ydim",
     "defaultValue": 10,
