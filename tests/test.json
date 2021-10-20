@@ -6,12 +6,12 @@
     {
     "kind": "PropertyValue",
     "name": "nclust",
-    "value": 4
+    "value": "4"
     },
     {
     "kind": "PropertyValue",
     "name": "seed",
-    "value": 42
+    "value": "42"
   }
   ], 
   "inputDataUri": "groups_series_measurement2_exp.tsv",
