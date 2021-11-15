@@ -23,5 +23,6 @@
   "yAxis": "Measurement",
   "xAxis": "",
   "equalityMethod": "R2",
-  "r2": 0.97
+  "r2": 0.97,
+  "skipColumns": [".base64.serialized.r.model"]
 }
