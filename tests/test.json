@@ -21,5 +21,7 @@
   "colors": [],
   "labels": [],
   "yAxis": "Measurement",
-  "xAxis": ""
+  "xAxis": "",
+  "equalityMethod": "R2",
+  "r2": 0.97
 }
