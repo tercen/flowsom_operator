@@ -44,7 +44,7 @@ get_FlowSOM_Clusters <- function(data, ctx,n.clust, seed) {
   fsom$data <- NULL
   cluster_num = fsom$metaclustering[GetClusters(fsom)]
   df_out <- data.frame(
-    cluster_id = sprintf(paste0("c%0", nchar(as.character(cluster_num)), "d"), cluster_num)
+    cluster_id = sprintf(paste0("c%0", max(nchar(as.character(cluster_num))), "d"), cluster_num)
     #cluster_id = as.character(fsom$metaclustering[GetClusters(fsom)])
   )
   return(list(df_out, fsom))
