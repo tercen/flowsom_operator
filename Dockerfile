@@ -4,8 +4,11 @@ USER root
 WORKDIR /operator/flowsom_operator
 
 RUN git checkout master
-RUN echo 1.2.9 && git pull
-RUN git checkout 1.2.9
+RUN echo 1.2.10 && git pull
+RUN git checkout 1.2.10
+
+RUN R -e "if(!require('BiocManager', quietly=TRUE)) install.packages('BiocManager')"
+RUN R -e "BiocManager::install('MetaCyto')"
 
 ENV TERCEN_SERVICE_URI https://tercen.com
 
