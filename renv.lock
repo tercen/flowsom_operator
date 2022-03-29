@@ -347,6 +347,13 @@
       "Repository": "CRAN",
       "Hash": "b7d8d8ee39869c18d8846a184dd8a1af"
     },
+    "boot": {
+      "Package": "boot",
+      "Version": "1.3-26",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "b25485f57dee55a6190e008f66654907"
+    },
     "broom": {
       "Package": "broom",
       "Version": "0.7.9",
@@ -894,10 +901,10 @@
     },
     "misc3d": {
       "Package": "misc3d",
-      "Version": "0.9-0",
+      "Version": "0.9-1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a4540e756faacd9167feb536819e74a7"
+      "Hash": "c075218a4fc802bab009a7f5e01bb686"
     },
     "mnormt": {
       "Package": "mnormt",
