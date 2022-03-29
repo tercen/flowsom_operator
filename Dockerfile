@@ -4,8 +4,8 @@ USER root
 WORKDIR /operator/flowsom_operator
 
 RUN git checkout master
-RUN echo 1.1.1 && git pull
-RUN git checkout 1.1.1
+RUN echo 1.2.2 && git pull
+RUN git checkout 1.2.2
 
 ENV TERCEN_SERVICE_URI https://tercen.com
 
