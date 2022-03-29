@@ -2,7 +2,7 @@
   "name": "FlowSOM",
   "description": "Flow Cytometry Self Organising Maps: An algorithm that clusters cells based on chosen channels and maps them into populations.",
   "tags": ["flow cytometry", "clustering"],
-  "container": "lucas501/flowsom:1.1.1",
+  "container": "tercen/flowsom:1.2.0",
   "authors": ["tercen"],
   "urls": ["https://github.com/tercen/flowsom_operator"],
   "properties": [
@@ -65,6 +65,18 @@
     "name": "distf",
     "defaultValue": 2,
     "description": "Distance setting"
+  },
+ {
+    "kind": "DoubleProperty",
+    "name": "minPercent",
+    "defaultValue": 0.05,
+    "description": "minPercent"
+  },
+ {
+    "kind": "DoubleProperty",
+    "name": "labelQuantile",
+    "defaultValue": 0.95,
+    "description": "labelQuantile"
   }
   ]
 }

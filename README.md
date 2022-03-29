@@ -24,15 +24,20 @@ Input parameters|.
 `alpha_start`| Start learning rate
 `alpha_end`|  End learning rate
 `dstf`| Distance function (1=manhattan, 2=euclidean, 3=chebyshev, 4=cosine)
+`minPercent`|  min percent (defaut_ 0.05)
+`labelQuantile`| label quantile (default: 0.95)
+
 
 Output relations|.
 ---|---
-`cluster`| character, cluster label
+`cluster_id`| character, cluster ID
+`cluster_label`| character, cluster label
 `model`| character, name of the flowSOM model (to be used with other operators)
 
 ##### Details
 
-The operator is a wrapper for the `FlowSOM` function of the `FlowSOM` [R/Bioconductor package](https://bioconductor.org/packages/FlowSOM/).
+The operator is a wrapper for the `FlowSOM` function of the `FlowSOM` [R/Bioconductor package](https://bioconductor.org/packages/FlowSOM/). Cluster labelling is performed using 
+the `labelCluster` function from the `MetaCyto` [R/Bioconductor package](https://bioconductor.org/packages/MetaCyto/).
 
 ##### See Also
 

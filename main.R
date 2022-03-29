@@ -5,6 +5,7 @@ library(flowCore)
 library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
+library(MetaCyto)
 
 
 get_FlowSOM_Clusters <- function(data, ctx,n.clust, seed) {
@@ -21,6 +22,10 @@ get_FlowSOM_Clusters <- function(data, ctx,n.clust, seed) {
     ifelse(is.null(ctx$op.value('alpha_2')), 0.01, as.double(ctx$op.value('alpha_2')))
   )
   distf  = ifelse(is.null(ctx$op.value('distf')), 2, as.integer(ctx$op.value('distf')))
+  
+  # parameters for cluster labelling
+  minPercent  = ifelse(is.null(ctx$op.value('minPercent')), 0.05, as.double(ctx$op.value('minPercent')))
+  labelQuantile  = ifelse(is.null(ctx$op.value('labelQuantile')), 0.95, as.double(ctx$op.value('labelQuantile')))
   
   maxMeta <- NULL
   if(!is.null(ctx$op.value('maxMeta')) && !ctx$op.value('maxMeta') == "NULL") maxMeta <- as.integer(ctx$op.value('maxMeta'))
@@ -45,9 +50,27 @@ get_FlowSOM_Clusters <- function(data, ctx,n.clust, seed) {
   cluster_num = fsom$metaclustering[GetClusters(fsom)]
   df_out <- data.frame(
     cluster_id = sprintf(paste0("c%0", max(nchar(as.character(cluster_num))), "d"), cluster_num)
-    #cluster_id = as.character(fsom$metaclustering[GetClusters(fsom)])
   )
-  return(list(df_out, fsom))
+  
+  clust_ids <- unique(df_out$cluster_id)
+  clusters_as_list <- lapply(
+    clust_ids,
+    function(x) which(df_out$cluster_id == x)
+  )
+  names(clusters_as_list) <- clust_ids
+
+  cluster_labels <- MetaCyto::labelCluster(
+    fcsFrame = flow.dat,
+    clusterList = clusters_as_list,
+    minPercent = 0.05,
+    labelQuantile = 0.95
+  )
+
+  df_out2 <- as_tibble(cluster_labels["clusterLabel"]) %>% 
+    mutate(cluster_id = names(clusters_as_list)) %>%
+    right_join(df_out, by = "cluster_id")
+  
+  return(list(df_out2, fsom))
 }
 
 ctx <- tercenCtx()

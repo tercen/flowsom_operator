@@ -6,8 +6,8 @@ library(FlowSOM)
 # remotes::install_github("tercen/tim")
 library(tim)
 
-options("tercen.workflowId" = "356f9d7215940b3876274878df01d649")
-options("tercen.stepId"     = "1efc7787-c913-41ff-954e-0af3eddedbad")
+options("tercen.workflowId" = "29a5faa8bb80e8043fc2035cfd0039fc")
+options("tercen.stepId"     = "bda18bc7-d57e-4dd2-aa3e-84d7aa9b530b")
 
 getOption("tercen.workflowId")
 getOption("tercen.stepId")
