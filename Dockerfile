@@ -1,16 +1,11 @@
-FROM tercen/flowsuite:0.0.1
+FROM tercen/flowsom:0.1.14
 
-# ENV RENV_VERSION 0.13.0
-# RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cran.r-project.org'))"
-# RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
+USER root
+WORKDIR /operator/flowsom_operator
 
-COPY . /operator
-WORKDIR /operator
-
-# RUN apt-get update
-# RUN apt-get install -y tk
-
-# RUN R -e "renv::consent(provided=TRUE);renv::restore(confirm=FALSE)"
+RUN git checkout master
+RUN echo 1.2.9 && git pull
+RUN git checkout 1.2.9
 
 ENV TERCEN_SERVICE_URI https://tercen.com
 
