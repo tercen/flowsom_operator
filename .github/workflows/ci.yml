@@ -7,6 +7,8 @@ name: CI
 on:
   push:
     branches: [main, master]
+    tags-ignore:
+      - '**'
   pull_request:
     branches: [main, master]
 
@@ -21,9 +23,26 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+    - name: ENV
+      run: |
+        echo "REPO_NAME=${{ github.event.repository.name }}" >> $GITHUB_ENV
+        echo "TAG=latest" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE=tercen/${{ github.event.repository.name }}" >> $GITHUB_ENV
+        echo "DOCKER_IMAGE_FULL=tercen/${{ github.event.repository.name }}:latest" >> $GITHUB_ENV
+        echo "OPERATOR_DOCKER_IMAGE=$(jq -r '.container' operator.json)" >> $GITHUB_ENV
+    - name: Build docker image
+      run: |
+        docker build -t $DOCKER_IMAGE:$TAG .
+    - name: docker login
+      run: |
+        docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_PASSWORD }}
+    - name: docker push
+      run: |
+        docker push $DOCKER_IMAGE:$TAG
     - name: Pull tercenctl
       run: docker pull tercen/tercenctl:release
     - name: Install operator
+      if: env.OPERATOR_DOCKER_IMAGE == env.DOCKER_IMAGE_FULL
       run: |
         docker run --rm \
           -e TERCEN_USERNAME=${{ secrets.TERCEN_TEST_OPERATOR_USERNAME }} \

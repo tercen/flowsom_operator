@@ -7,8 +7,8 @@ RUN R -e "if(!require('BiocManager', quietly=TRUE)) install.packages('BiocManage
 RUN R -e "BiocManager::install('MetaCyto')"
 
 RUN git checkout master
-RUN echo 1.2.11 && git pull
-RUN git checkout 1.2.11
+RUN echo 1.2.12 && git pull
+RUN git checkout 1.2.12
 
 ENV TERCEN_SERVICE_URI https://tercen.com
 
