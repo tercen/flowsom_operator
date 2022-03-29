@@ -1,4 +1,4 @@
-FROM tercen/flowsom:0.1.14
+FROM tercen/runtime-r40:4.0.4-1
 
 ENV RENV_VERSION 0.13.0
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cran.r-project.org'))"
@@ -6,6 +6,9 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 COPY . /operator
 WORKDIR /operator
+
+RUN apt-get update
+RUN apt-get install -y tk
 
 RUN R -e "renv::consent(provided=TRUE);renv::restore(confirm=FALSE)"
 
