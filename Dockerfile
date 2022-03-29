@@ -1,4 +1,4 @@
-FROM tercen/flowsuite:latest
+FROM tercen/flowsuite:0.0.1
 
 # ENV RENV_VERSION 0.13.0
 # RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cran.r-project.org'))"
