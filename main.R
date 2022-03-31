@@ -1,4 +1,5 @@
 library(tercen)
+library(tercenApi)
 library(dplyr)
 library(flowCore)
 library(FlowSOM)
