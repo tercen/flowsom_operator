@@ -62,7 +62,9 @@ metacluster_num = GetMetaclusters(fsom)
 
 df_out <- data.frame(
   cluster_id = sprintf(paste0("c%0", max(nchar(as.character(cluster_num))), "d"), cluster_num),
-  metacluster_id = sprintf(paste0("c%0", max(nchar(as.character(metacluster_num))), "d"), metacluster_num)
+  cluster_number = as.integer(cluster_num),
+  metacluster_id = sprintf(paste0("c%0", max(nchar(as.character(metacluster_num))), "d"), metacluster_num),
+  metacluster_number = as.integer(metacluster_num)
 )
 
 clust_ids <- unique(df_out$metacluster_id)
