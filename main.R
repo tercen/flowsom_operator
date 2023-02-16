@@ -9,8 +9,7 @@ suppressPackageStartupMessages({
 
 ctx <- tercenCtx()
 
-seed <- 42
-if(!ctx$op.value('seed') < 0) seed <- as.integer(ctx$op.value('seed'))
+seed <- ctx$op.value('seed', as.integer, -1)
 if(seed > 0) set.seed(seed)
 
 n.clust <- NULL
