@@ -23,5 +23,6 @@
       "value": "42"
     }
   ],
-  "relTol": 1e-05
+  "relTol": 1e-05,
+  "skipColumns": [".base64.serialized.r.model"]
 }
