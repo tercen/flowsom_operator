@@ -9,8 +9,13 @@ suppressPackageStartupMessages({
 
 ctx <- tercenCtx()
 
-seed <- ctx$op.value('seed', as.integer, -1)
-if(seed > 0) set.seed(seed)
+# seed <- ctx$op.value('seed', as.integer, 42)
+# if(seed > 0) {
+#   set.seed(seed)
+# } else {
+#   seed <- NULL
+# }
+seed <- 42
 
 n.clust <- NULL
 if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
@@ -32,10 +37,6 @@ alpha  = c(
   ifelse(is.null(ctx$op.value('alpha_2')), 0.01, as.double(ctx$op.value('alpha_2')))
 )
 distf  = ifelse(is.null(ctx$op.value('distf')), 2, as.integer(ctx$op.value('distf')))
-
-# parameters for cluster labelling
-minPercent  = ifelse(is.null(ctx$op.value('minPercent')), 0.05, as.double(ctx$op.value('minPercent')))
-labelQuantile  = ifelse(is.null(ctx$op.value('labelQuantile')), 0.95, as.double(ctx$op.value('labelQuantile')))
 
 maxMeta <- NULL
 if(!is.null(ctx$op.value('maxMeta')) && !ctx$op.value('maxMeta') == "NULL") maxMeta <- as.integer(ctx$op.value('maxMeta'))
