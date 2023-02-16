@@ -1,0 +1,27 @@
+{
+  "kind": "OperatorUnitTest",
+  "name": "test_1",
+  "namespace": "ds1",
+  "inputDataUri": "test_1_in.csv",
+  "outputDataUri": ["test_1_out_1.csv", "test_1_out_2.csv"],
+  "columns": [
+    "observation"
+  ],
+  "rows": ["variable"],
+  "colors": [
+    "color"
+  ],
+  "labels": [],
+  "yAxis": "y_values",
+  "xAxis": "",
+  "generatedOn": "02/16/2023 01:16:43 PM 2023",
+  "version": "",
+  "propertyValues": [
+    {
+      "kind": "PropertyValue",
+      "name": "seed",
+      "value": "42"
+    }
+  ],
+  "relTol": 1e-05
+}

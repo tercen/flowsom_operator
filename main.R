@@ -1,16 +1,17 @@
-library(tercen)
-library(tercenApi)
-library(dplyr)
-library(flowCore)
-library(FlowSOM)
-library(tim)
-library(MetaCyto)
+suppressPackageStartupMessages({
+  library(tercen)
+  library(tercenApi)
+  library(dplyr)
+  library(flowCore)
+  library(FlowSOM)
+  library(tim)
+})
 
 ctx <- tercenCtx()
 
 seed <- NULL
 if(!ctx$op.value('seed') < 0) seed <- as.integer(ctx$op.value('seed'))
-set.seed(seed)
+if(seed > 0) set.seed(seed)
 
 n.clust <- NULL
 if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
@@ -65,53 +66,11 @@ df_out <- data.frame(
   metacluster_id = sprintf(paste0("c%0", max(nchar(as.character(metacluster_num))), "d"), metacluster_num)
 )
 
-clust_ids <- unique(df_out$metacluster_id)
-clusters_as_list <- lapply(
-  clust_ids,
-  function(x) which(df_out$metacluster_id == x)
-)
-names(clusters_as_list) <- clust_ids
-
-cluster_labels <- data.frame(
-  metacluster_id = names(clusters_as_list),
-  metacluster_label = NA
-)
-
-clusterList <- clusters_as_list
-antibodies <- colnames(data)
-cutoff <- apply(data, 2, MetaCyto::findCutoff)
-
-labels <- rep(NA, length(clusterList))
-names(labels) <- names(clusterList)
-
-for (i in 1:length(clusterList)) {
-  l = c()
-  for (j in 1:length(antibodies)) {
-    x1 = quantile(data[, j], minPercent)
-    x2 = quantile(data[, j], (1 - minPercent))
-    if (!(cutoff[j] < x1 | cutoff[j] > x2)) {
-      x = data[clusterList[[i]], j]
-      if (quantile(x, labelQuantile) < cutoff[j]) {
-        l = c(l, paste0(antibodies[j], "-"))
-      }
-      else if (quantile(x, (1 - labelQuantile)) > cutoff[j]) {
-        l = c(l, paste0(antibodies[j], "+"))
-      }
-    }
-  }
-  l = paste(l, collapse = "|")
-  labels[i] = l
-}
-
-cluster_labels[["metacluster_label"]] <- labels
-
-df_out2 <- left_join(df_out, cluster_labels, by = "metacluster_id")
-
-results <- list(df_out2, fsom)
+results <- list(df_out, fsom)
 
 df_out <- results[[1]] %>%
   as_tibble() %>%
-  mutate(.ci = seq_len(nrow(.)) - 1)
+  mutate(.ci = seq_len(nrow(.)) - 1L)
 
 model <- results[[2]]
 res <- get_serialized_result(
