@@ -9,7 +9,7 @@ suppressPackageStartupMessages({
 
 ctx <- tercenCtx()
 
-seed <- NULL
+seed <- 42
 if(!ctx$op.value('seed') < 0) seed <- as.integer(ctx$op.value('seed'))
 if(seed > 0) set.seed(seed)
 
