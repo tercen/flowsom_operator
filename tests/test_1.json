@@ -16,6 +16,12 @@
   "xAxis": "",
   "generatedOn": "02/16/2023 01:45:25 PM 2023",
   "version": "",
-  "propertyValues": [],
+  "propertyValues": [
+    {
+      "kind": "PropertyValue",
+      "name": "seed",
+      "value": "42"
+    }
+  ],
   "relTol": 1e-05
 }
