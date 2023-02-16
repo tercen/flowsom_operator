@@ -65,18 +65,6 @@
     "name": "distf",
     "defaultValue": 2,
     "description": "Distance setting"
-  },
- {
-    "kind": "DoubleProperty",
-    "name": "minPercent",
-    "defaultValue": 0.05,
-    "description": "minPercent"
-  },
- {
-    "kind": "DoubleProperty",
-    "name": "labelQuantile",
-    "defaultValue": 0.95,
-    "description": "labelQuantile"
   }
   ]
 }

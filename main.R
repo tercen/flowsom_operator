@@ -9,13 +9,12 @@ suppressPackageStartupMessages({
 
 ctx <- tercenCtx()
 
-# seed <- ctx$op.value('seed', as.integer, 42)
-# if(seed > 0) {
-#   set.seed(seed)
-# } else {
-#   seed <- NULL
-# }
-seed <- 42
+seed <- ctx$op.value('seed', as.integer, 42)
+if(seed > 0) {
+  set.seed(seed)
+} else {
+  seed <- NULL
+}
 
 n.clust <- NULL
 if(!is.null(ctx$op.value('nclust')) && !ctx$op.value('nclust') == "NULL") n.clust <- as.integer(ctx$op.value('nclust'))
