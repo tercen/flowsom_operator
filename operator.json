@@ -1,6 +1,6 @@
 {
   "name": "FlowSOM",
-  "description": "Flow Cytometry Self Organising Maps: An algorithm that clusters cells based on chosen channels and maps them into populations.",
+  "description": "Clusters flow cytometry data points using a graph-based algorithm.",
   "tags": [
     "flow cytometry",
     "clustering"
