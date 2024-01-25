@@ -1,72 +1,77 @@
 {
   "name": "FlowSOM",
   "description": "Flow Cytometry Self Organising Maps: An algorithm that clusters cells based on chosen channels and maps them into populations.",
-  "tags": ["flow cytometry", "clustering"],
+  "tags": [
+    "flow cytometry",
+    "clustering"
+  ],
   "container": "tercen/flowsom_operator:1.6.0",
-  "authors": ["tercen"],
-  "urls": ["https://github.com/tercen/flowsom_operator"],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/flowsom_operator"
+  ],
   "properties": [
-   {
-    "kind": "StringProperty",
-    "name": "nclust",
-    "defaultValue": "NULL",
-    "description": "Number of clusters to infer"
-  },
-  {
-    "kind": "StringProperty",
-    "name": "maxMeta",
-    "defaultValue": "NULL",
-    "description": "Maximal number of clusters (if specified, nclust is ignored). If both nclust and masMeta are NULL, maxMeta is set to 10."
-  },
-  {
-    "kind": "DoubleProperty",
-    "name": "seed",
-    "defaultValue": -1,
-    "description": "Seed for random number generation. if less than 0, set a Random seed"
-  },
-  {
-    "kind": "DoubleProperty",
-    "name": "xdim",
-    "defaultValue": 10,
-    "description": "Size of x dim for the SOM grid"
-  },
-  {
-    "kind": "DoubleProperty",
-    "name": "ydim",
-    "defaultValue": 10,
-    "description": "Size of y dim for the SOM grid"
-  },
-  {
-    "kind": "DoubleProperty",
-    "name": "rlen",
-    "defaultValue": 10,
-    "description": "Size of rlen"
-  },
-   {
-    "kind": "DoubleProperty",
-    "name": "mst",
-    "defaultValue": 1,
-    "description": "Amount of training"
-  },
-   {
-    "kind": "DoubleProperty",
-    "name": "alpha_1",
-    "defaultValue": 0.05,
-    "description": "Alpha1 setting"
-  },
-   {
-    "kind": "DoubleProperty",
-    "name": "alpha_2",
-    "defaultValue": 0.01,
-    "description": "Alpha2 setting"
-  },
- {
-    "kind": "DoubleProperty",
-    "name": "distf",
-    "defaultValue": 2,
-    "description": "Distance setting"
-  }
+    {
+      "kind": "StringProperty",
+      "name": "nclust",
+      "defaultValue": "NULL",
+      "description": "Number of clusters to infer"
+    },
+    {
+      "kind": "StringProperty",
+      "name": "maxMeta",
+      "defaultValue": "NULL",
+      "description": "Maximal number of clusters (if specified, nclust is ignored). If both nclust and masMeta are NULL, maxMeta is set to 10."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "seed",
+      "defaultValue": -1,
+      "description": "Seed for random number generation. if less than 0, set a Random seed"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "xdim",
+      "defaultValue": 10,
+      "description": "Size of x dim for the SOM grid"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "ydim",
+      "defaultValue": 10,
+      "description": "Size of y dim for the SOM grid"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "rlen",
+      "defaultValue": 10,
+      "description": "Size of rlen"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "mst",
+      "defaultValue": 1,
+      "description": "Amount of training"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "alpha_1",
+      "defaultValue": 0.05,
+      "description": "Alpha1 setting"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "alpha_2",
+      "defaultValue": 0.01,
+      "description": "Alpha2 setting"
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "distf",
+      "defaultValue": 2,
+      "description": "Distance setting"
+    }
   ]
 }
-
-
