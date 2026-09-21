@@ -123,6 +123,96 @@ fn the_clusters_match_the_r_operator() {
     }
 }
 
+/// The `operatorSpec` vocabulary is not free-form, and inventing a kind is not caught until
+/// install, which is the worst place to find it: `0.1.0` shipped with `JoinSpec`,
+/// `RelationSpec` and `AttributeSpec` — all made up — and the platform refused it with
+/// `Invalid argument (bad kind error): "JoinSpec"` after pulling the image.
+///
+/// The accepted set below is taken from the manifests the platform has actually installed:
+/// `cytonorm_rust_operator`, `asinh_rust_operator` and `read_fcs_rust_operator`. A kind outside
+/// it is either a typo or an invention.
+#[test]
+fn the_spec_uses_only_kinds_the_platform_knows() {
+    const KNOWN: &[&str] = &[
+        "OperatorSpec",
+        "CrosstabSpec",
+        "MetaFactor",
+        "AxisSpec",
+        // Output: a plain OperatorJoinSpec, or a ConditionalJoinSpec of OutputAlternatives each
+        // carrying one. There is no bare "JoinSpec".
+        "OperatorJoinSpec",
+        "ConditionalJoinSpec",
+        "OutputAlternative",
+        "JoinOperator",
+        "ColumnPair",
+        "TableRelation",
+        "Attribute",
+        "Pair",
+    ];
+    let manifest = concat!(env!("CARGO_MANIFEST_DIR"), "/operator.json");
+    let spec: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(manifest).unwrap()).unwrap();
+
+    fn kinds(v: &serde_json::Value, out: &mut Vec<String>) {
+        match v {
+            serde_json::Value::Object(m) => {
+                if let Some(serde_json::Value::String(k)) = m.get("kind") {
+                    out.push(k.clone());
+                }
+                for x in m.values() {
+                    kinds(x, out);
+                }
+            }
+            serde_json::Value::Array(a) => a.iter().for_each(|x| kinds(x, out)),
+            _ => {}
+        }
+    }
+    let mut found = Vec::new();
+    kinds(&spec["operatorSpec"], &mut found);
+    assert!(!found.is_empty(), "the spec has no kinds at all");
+    for k in &found {
+        assert!(
+            KNOWN.contains(&k.as_str()),
+            "operatorSpec uses kind '{k}', which no installed Tercen operator uses. The platform              rejects it at install with `bad kind error`."
+        );
+    }
+}
+
+/// What the spec promises must be what the writer emits.
+#[test]
+fn the_spec_declares_the_columns_the_writer_writes() {
+    let manifest = concat!(env!("CARGO_MANIFEST_DIR"), "/operator.json");
+    let spec: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(manifest).unwrap()).unwrap();
+    let joins = spec["operatorSpec"]["outputSpecsV2"][0]["joinOperators"]
+        .as_array()
+        .expect("outputSpecsV2[0].joinOperators");
+    assert_eq!(joins.len(), 2, "the per-cell table and the map");
+
+    let names = |j: &serde_json::Value| -> Vec<String> {
+        j["rightRelation"]["attributes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|a| a["name"].as_str().unwrap().to_string())
+            .collect()
+    };
+    assert_eq!(names(&joins[0]), ["cluster_id", "metacluster_id"]);
+    assert_eq!(names(&joins[1]), ["node", "metacluster"]);
+    // The per-cell table is one row per column of the crosstab, so it joins on Column alone.
+    assert_eq!(
+        joins[0]["leftPair"]["lColumns"].as_array().unwrap(),
+        &vec![serde_json::json!("Column")]
+    );
+    // The map is standalone: it has one row per node and joins on nothing.
+    assert!(
+        joins[1]["leftPair"]["lColumns"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}
+
 /// Every property the code reads must be declared, or a user cannot set it; and the defaults
 /// must agree, or the panel shows one number and the operator uses another.
 #[test]

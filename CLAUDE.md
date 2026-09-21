@@ -41,6 +41,25 @@ declare.
   ConsensusClusterPlus with no seed, so R reseeds from the clock. There is therefore no fixture
   for the whole `maxMeta` path, only for its parts.
 
+## The operatorSpec vocabulary is fixed, and inventing a kind fails at install
+
+`0.1.0` shipped with `JoinSpec`, `RelationSpec` and `AttributeSpec` in `outputSpecsV2`. All three
+were invented; the platform pulled the image, then refused the operator with
+`Invalid argument (bad kind error): "JoinSpec"`. The real vocabulary, taken from the manifests
+the platform has accepted:
+
+```
+outputSpecsV2: [ OperatorJoinSpec { joinOperators: [ JoinOperator {
+    joinType, leftPair: ColumnPair { lColumns, rColumns },
+    rightRelation: TableRelation { attributes: [ Attribute { name, type } ],
+                                   meta_data: [ Pair { key, value } ] } } ] } ]
+```
+
+and, when the output shape depends on a property, `ConditionalJoinSpec { alternatives: [
+OutputAlternative { condition, joinSpec: OperatorJoinSpec } ] }`. There is no bare `JoinSpec`.
+`tests/r_parity.rs` now asserts every kind against that list — copy the shape from an operator
+that installs rather than reading it off the model definition, which differs between versions.
+
 ## Two things only a live instance finds
 
 Both cost a failed task each, after the operator had exited cleanly:

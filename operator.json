@@ -14,7 +14,7 @@
     "https://github.com/tercen/flowsom_rust_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.0",
+  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.1",
   "properties": [
     {
       "kind": "StringProperty",
@@ -93,22 +93,22 @@
         "metaFactors": [
           {
             "kind": "MetaFactor",
-            "name": "Variable",
+            "name": "Row",
             "type": "",
-            "description": "Channel identifiers",
+            "description": "Channel (or variable) name.",
             "ontologyMapping": "variable",
             "crosstabMapping": "row",
-            "cardinality": "1..n",
+            "cardinality": "0..n",
             "factors": []
           },
           {
             "kind": "MetaFactor",
-            "name": "Observation",
+            "name": "Column",
             "type": "",
-            "description": "Cell identifiers",
+            "description": "Cell, event or observation identifier. Every cell needs a value for every channel: the map clusters whole cells.",
             "ontologyMapping": "observation",
             "crosstabMapping": "column",
-            "cardinality": "1..n",
+            "cardinality": "0..n",
             "factors": []
           }
         ],
@@ -119,8 +119,8 @@
               {
                 "kind": "MetaFactor",
                 "name": "Measurement",
-                "type": "numeric",
-                "description": "Channel value",
+                "type": "double",
+                "description": "Values to cluster",
                 "ontologyMapping": "measurement",
                 "crosstabMapping": "y",
                 "cardinality": "1",
@@ -133,54 +133,66 @@
     ],
     "outputSpecsV2": [
       {
-        "kind": "ConditionalJoinSpec",
-        "alternatives": [
+        "kind": "OperatorJoinSpec",
+        "joinOperators": [
           {
-            "kind": "JoinSpec",
-            "getPredictedAttributes": true,
-            "hasDynamicOutput": false,
-            "relationSpecs": [
-              {
-                "kind": "RelationSpec",
-                "name": "cells",
-                "description": "One row per cell: its node and its metacluster",
-                "allowAdditionalAttributes": false,
-                "attributes": [
-                  {
-                    "kind": "AttributeSpec",
-                    "name": "cluster_id",
-                    "type": "string",
-                    "description": "SOM node, zero padded"
-                  },
-                  {
-                    "kind": "AttributeSpec",
-                    "name": "metacluster_id",
-                    "type": "string",
-                    "description": "Metacluster, zero padded"
-                  }
-                ]
-              },
-              {
-                "kind": "RelationSpec",
-                "name": "Map",
-                "description": "One row per node: its metacluster and its codes",
-                "allowAdditionalAttributes": true,
-                "attributes": [
-                  {
-                    "kind": "AttributeSpec",
-                    "name": "node",
-                    "type": "string",
-                    "description": "SOM node, zero padded"
-                  },
-                  {
-                    "kind": "AttributeSpec",
-                    "name": "metacluster",
-                    "type": "string",
-                    "description": "Metacluster it belongs to"
-                  }
-                ]
-              }
-            ]
+            "kind": "JoinOperator",
+            "joinType": "left",
+            "leftPair": {
+              "kind": "ColumnPair",
+              "lColumns": [
+                "Column"
+              ],
+              "rColumns": [
+                "Column"
+              ]
+            },
+            "rightRelation": {
+              "kind": "TableRelation",
+              "attributes": [
+                {
+                  "kind": "Attribute",
+                  "name": "cluster_id",
+                  "type": "string"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "metacluster_id",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "JoinOperator",
+            "joinType": "left",
+            "leftPair": {
+              "kind": "ColumnPair",
+              "lColumns": [],
+              "rColumns": []
+            },
+            "rightRelation": {
+              "kind": "TableRelation",
+              "meta_data": [
+                {
+                  "kind": "Pair",
+                  "key": "allowAdditionalAttributes",
+                  "value": "true"
+                }
+              ],
+              "attributes": [
+                {
+                  "kind": "Attribute",
+                  "name": "node",
+                  "type": "string"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "metacluster",
+                  "type": "string"
+                }
+              ]
+            }
           }
         ]
       }
