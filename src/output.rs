@@ -117,27 +117,18 @@ pub fn write_cells<W: Write>(
     ];
     write_header(w, "cells", n, &cols, 2)?;
 
+    // `str_list`, not a generic list of strings: the server reads a column as a typed list and
+    // rejects anything else with "expected type as LSTSTR,LSTU8, …".
     let node_width = label_width(node.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[0], n)?;
-    w.list(n)?;
-    for v in node {
-        w.str(&label(*v, node_width))?;
-    }
+    w.str_list(&node.iter().map(|v| label(*v, node_width)).collect::<Vec<_>>())?;
 
     let meta_width = label_width(metacluster.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[1], n)?;
-    w.list(n)?;
-    for v in metacluster {
-        w.str(&label(*v, meta_width))?;
-    }
+    w.str_list(&metacluster.iter().map(|v| label(*v, meta_width)).collect::<Vec<_>>())?;
 
     write_column_header(w, &cols[2], n)?;
-    w.i32_list_header(n)?;
-    let mut buf = Vec::with_capacity(n * 4);
-    for i in 0..n {
-        buf.extend_from_slice(&(i as i32).to_le_bytes());
-    }
-    w.raw(&buf)?;
+    w.i32_list(&(0..n as i32).collect::<Vec<_>>())?;
     Ok(())
 }
 
@@ -189,26 +180,15 @@ pub fn write_map<W: Write>(
 
     let node_width = label_width(ncodes);
     write_column_header(w, &cols[0], ncodes)?;
-    w.list(ncodes)?;
-    for i in 1..=ncodes {
-        w.str(&label(i, node_width))?;
-    }
+    w.str_list(&(1..=ncodes).map(|i| label(i, node_width)).collect::<Vec<_>>())?;
 
     let meta_width = label_width(metaclustering.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[1], ncodes)?;
-    w.list(ncodes)?;
-    for v in metaclustering {
-        w.str(&label(*v, meta_width))?;
-    }
+    w.str_list(&metaclustering.iter().map(|v| label(*v, meta_width)).collect::<Vec<_>>())?;
 
     for j in 0..p {
         write_column_header(w, &cols[2 + j], ncodes)?;
-        w.f64_list_header(ncodes)?;
-        let mut buf = Vec::with_capacity(ncodes * 8);
-        for i in 0..ncodes {
-            buf.extend_from_slice(&codes[i + j * ncodes].to_le_bytes());
-        }
-        w.raw(&buf)?;
+        w.f64_list(&codes[j * ncodes..(j + 1) * ncodes])?;
     }
     Ok(())
 }
@@ -247,8 +227,10 @@ fn write_simple_relation<W: Write>(w: &mut TsonWriter<W>, name: &str) -> Result<
     w.str("SimpleRelation")?;
     w.key("id")?;
     w.str(name)?;
-    w.key("inMemoryRelation")?;
-    w.bool(false)?;
+    // `index` is not optional: without it the worker fails the task with `missing field `index``
+    // long after the operator has exited cleanly.
+    w.key("index")?;
+    w.i32(0)?;
     Ok(())
 }
 

@@ -1,6 +1,6 @@
 {
   "kind": "OperatorEstimateModel",
-  "intercept": 0.000016,
+  "intercept": 0.000014,
   "offset": 60.0,
   "features": [
     {

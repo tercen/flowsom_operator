@@ -7,14 +7,40 @@ every code, every node's metacluster, and all 3,000 `cluster_id` / `metacluster_
 (`tests/r_parity.rs`, 10×10 map, `nclust = 5`, `scale = TRUE`). The clustering itself is
 [`flowsom-rs`](https://github.com/tercen/flowsom-rs) 0.1.2.
 
-## Not measured yet
+## Measured on a Studio dev run (2026-09-21)
 
-- **The memory model is a calculation, not a measurement**: 16 bytes a value plus 90 MB, from
-  4 bytes for the gathered `f32` matrix, 8 for the `f64` copy the map trains on, and the result.
-  It needs a dev run on a real crosstab and a refit, as every other operator in this family did.
-- **Speed at scale.** The hundred consensus resamples are quadratic in the number of nodes, so a
-  15×15 map (225 nodes) costs about five times a 10×10. Not yet timed on a cohort.
-- **No Studio dev run.** The parity tests need no Tercen instance; the read and write path does.
+| projection | wall | peak RSS |
+|---|---|---|
+| 1,200 cells x 4 channels, 5x5 map, nclust 4 | 0.2 s | 12 MB |
+| 100,000 cells x 20 channels, 10x10 map, nclust 6 | 3.4 s | 80 MB |
+
+That is **34 bytes per value** between the two points: 12 for the gathered `f32` matrix and the
+`f64` copy the map trains on, and the rest a constant — one decoded chunk of a million rows,
+plus the binary and tonic. The model books `0.000014 x n_main + 90 MB`, which is 118 MB where
+80 was used.
+
+Two things the run found, both now fixed and both invisible until a real instance saw them: a
+column has to be written as a **typed** list (`str_list`, not a list of strings, or the server
+says `expected type as LSTSTR,LSTU8, ...`), and `SimpleRelation` needs an **`index`** field or
+the task fails with `missing field \`index\`` long after the operator has exited cleanly.
+
+## The scale limit, stated plainly
+
+The booking is linear in the crosstab, so a cohort-scale projection asks for a cohort-scale
+machine: 19.5 M cells x 43 channels is 838 M values, which is **about 12 GB**. That is the real
+cost of gathering a transpose, and the R operator does not do better — it holds doubles and
+copies them.
+
+The fix, when it is needed, is not more passes: reading the crosstab once takes about a second
+per 2 M values, so assigning in 480 MB blocks would be 21 passes and two and a half hours.
+Gather once to a spill file (838 M values is 3.4 GB of `f32` on disk), then stream it back. The
+operator already spills nothing today, so this is unwritten.
+
+Until then: subsample upstream, which is what CytoNorm itself does — `prepareFlowSOM` trains on
+at most a million cells.
+
+- **Speed of the metaclustering** is quadratic in the number of nodes: a 15x15 map (225 nodes)
+  costs about five times a 10x10. The 10x10 above took 2.3 s of the 3.4.
 
 ## Deliberately absent
 

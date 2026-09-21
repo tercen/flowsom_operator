@@ -41,6 +41,16 @@ declare.
   ConsensusClusterPlus with no seed, so R reseeds from the clock. There is therefore no fixture
   for the whole `maxMeta` path, only for its parts.
 
+## Two things only a live instance finds
+
+Both cost a failed task each, after the operator had exited cleanly:
+
+- A column must be a **typed** list. `w.list(n)` followed by `w.str(...)` per row looks right and
+  is rejected with `Tbl deser failed -- expected type as LSTSTR,LSTU8, ... ,LSTF64`. Use
+  `str_list`, `i32_list`, `f64_list`.
+- `SimpleRelation` needs an **`index`** field. Without it the worker fails with
+  `missing field \`index\`` and nothing in the operator's own log hints at it.
+
 ## Licence
 
 GPL-2.0-only and not by choice: see `LICENSING.md`. It constrains what may link this.
