@@ -6,9 +6,11 @@
 //! labels: a downstream step colours or facets by them, and a number invites arithmetic on a
 //! cluster index. The zero padding is what makes them sort correctly in the UI.
 //!
-//! The R operator also serialises the FlowSOM model object. A Rust operator cannot write an R
-//! object, so the map itself goes out as a second table instead: one row per node, its
-//! metacluster, and its codes.
+//! **One table, and only one.** The map used to go out as a second relation joined on nothing,
+//! which is a cross join: every event got every one of the map's rows, so colouring by
+//! metacluster coloured nothing. `phenograph_operator` and the R `flowsom_operator` both emit a
+//! single per-cell table, and that is the shape that works. The R operator's serialised model
+//! object has no Rust equivalent and is simply not produced.
 use std::io::Write;
 
 use anyhow::{Result, anyhow};
@@ -19,9 +21,6 @@ pub struct ColSpec<'a> {
     pub name: &'a str,
     pub ty: &'a str, // "double" | "int32" | "string"
 }
-
-/// Name of the second output relation: the trained map.
-pub const MAP: &str = "Map";
 
 /// `sprintf("c%0Nd", i)` — the width comes from the largest label, as the R operator does it.
 pub fn label(i: usize, width: usize) -> String {
@@ -94,6 +93,7 @@ pub fn write_column_header<W: Write>(
 /// The per-cell table: `.ci`, the node and the metacluster.
 pub fn write_cells<W: Write>(
     w: &mut TsonWriter<W>,
+    table_name: &str,
     namespace: &str,
     node: &[usize],
     metacluster: &[usize],
@@ -115,10 +115,13 @@ pub fn write_cells<W: Write>(
             ty: "int32",
         },
     ];
-    write_header(w, "cells", n, &cols, 2)?;
+    write_header(w, table_name, n, &cols, 1)?;
 
     // `str_list`, not a generic list of strings: the server reads a column as a typed list and
     // rejects anything else with "expected type as LSTSTR,LSTU8, …".
+    // Width from the largest value actually present, which is what R does:
+    // `sprintf("c%0*d", max(nchar(as.character(clust))), clust)`. The two columns are widened
+    // independently, as they are there.
     let node_width = label_width(node.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[0], n)?;
     w.str_list(
@@ -142,114 +145,11 @@ pub fn write_cells<W: Write>(
     Ok(())
 }
 
-/// The map: one row per node, its metacluster, and its codes — the replacement for the R
-/// operator's serialised model object. It is what lets someone see *why* a cell was clustered
-/// where it was, and it is the thing to keep if the map is to be applied to another dataset.
-pub fn write_map<W: Write>(
-    w: &mut TsonWriter<W>,
-    channels: &[String],
-    codes: &[f64],
-    ncodes: usize,
-    metaclustering: &[usize],
-) -> Result<()> {
-    let p = channels.len();
-    let mut cols: Vec<ColSpec> = vec![
-        ColSpec {
-            name: "node",
-            ty: "string",
-        },
-        ColSpec {
-            name: "metacluster",
-            ty: "string",
-        },
-    ];
-    for c in channels {
-        cols.push(ColSpec {
-            name: c,
-            ty: "double",
-        });
-    }
-
-    w.map(4)?;
-    w.key("kind")?;
-    w.str("Table")?;
-    w.key("nRows")?;
-    w.i32(ncodes as i32)?;
-    w.key("properties")?;
-    w.map(4)?;
-    w.key("kind")?;
-    w.str("TableProperties")?;
-    w.key("name")?;
-    w.str(MAP)?;
-    w.key("sortOrder")?;
-    w.list(0)?;
-    w.key("ascending")?;
-    w.bool(false)?;
-    w.key("columns")?;
-    w.list(cols.len())?;
-
-    let node_width = label_width(ncodes);
-    write_column_header(w, &cols[0], ncodes)?;
-    w.str_list(
-        &(1..=ncodes)
-            .map(|i| label(i, node_width))
-            .collect::<Vec<_>>(),
-    )?;
-
-    let meta_width = label_width(metaclustering.iter().copied().max().unwrap_or(1));
-    write_column_header(w, &cols[1], ncodes)?;
-    w.str_list(
-        &metaclustering
-            .iter()
-            .map(|v| label(*v, meta_width))
-            .collect::<Vec<_>>(),
-    )?;
-
-    for j in 0..p {
-        write_column_header(w, &cols[2 + j], ncodes)?;
-        w.f64_list(&codes[j * ncodes..(j + 1) * ncodes])?;
-    }
-    Ok(())
-}
-
-/// Close the result: the map is a standalone relation beside the per-cell one.
+/// Close the result. One relation, so no joins to declare.
 pub fn write_footer<W: Write>(w: &mut TsonWriter<W>) -> Result<()> {
     w.key("joinOperators")?;
-    w.list(1)?;
-    w.map(4)?;
-    w.key("kind")?;
-    w.str("JoinOperator")?;
-    w.key("joinType")?;
-    w.str("")?;
-    w.key("leftPair")?;
-    write_column_pair(w)?;
-    w.key("rightRelation")?;
-    write_simple_relation(w, MAP)?;
+    w.list(0)?;
     w.flush()?;
-    Ok(())
-}
-
-fn write_column_pair<W: Write>(w: &mut TsonWriter<W>) -> Result<()> {
-    w.map(3)?;
-    w.key("kind")?;
-    w.str("ColumnPair")?;
-    w.key("lColumns")?;
-    w.list(0)?;
-    w.key("rColumns")?;
-    w.list(0)?;
-    Ok(())
-}
-
-fn write_simple_relation<W: Write>(w: &mut TsonWriter<W>, name: &str) -> Result<()> {
-    w.map(3)?;
-    w.key("kind")?;
-    w.str("SimpleRelation")?;
-    w.key("id")?;
-    w.str(name)?;
-    // `index` is not optional: without it the worker fails the task with `missing field `index``
-    // long after the operator has exited cleanly.
-    w.key("index")?;
-    w.i32(0)?;
     Ok(())
 }
 

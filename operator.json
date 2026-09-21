@@ -14,7 +14,7 @@
     "https://github.com/tercen/flowsom_rust_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.1",
+  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.2",
   "properties": [
     {
       "kind": "StringProperty",
@@ -93,7 +93,7 @@
         "metaFactors": [
           {
             "kind": "MetaFactor",
-            "name": "Row",
+            "name": "Variable",
             "type": "",
             "description": "Channel (or variable) name.",
             "ontologyMapping": "variable",
@@ -103,7 +103,7 @@
           },
           {
             "kind": "MetaFactor",
-            "name": "Column",
+            "name": "Observation",
             "type": "",
             "description": "Cell, event or observation identifier. Every cell needs a value for every channel: the map clusters whole cells.",
             "ontologyMapping": "observation",
@@ -141,10 +141,10 @@
             "leftPair": {
               "kind": "ColumnPair",
               "lColumns": [
-                "Column"
+                "Observation"
               ],
               "rColumns": [
-                "Column"
+                "Observation"
               ]
             },
             "rightRelation": {
@@ -158,37 +158,6 @@
                 {
                   "kind": "Attribute",
                   "name": "metacluster_id",
-                  "type": "string"
-                }
-              ]
-            }
-          },
-          {
-            "kind": "JoinOperator",
-            "joinType": "left",
-            "leftPair": {
-              "kind": "ColumnPair",
-              "lColumns": [],
-              "rColumns": []
-            },
-            "rightRelation": {
-              "kind": "TableRelation",
-              "meta_data": [
-                {
-                  "kind": "Pair",
-                  "key": "allowAdditionalAttributes",
-                  "value": "true"
-                }
-              ],
-              "attributes": [
-                {
-                  "kind": "Attribute",
-                  "name": "node",
-                  "type": "string"
-                },
-                {
-                  "kind": "Attribute",
-                  "name": "metacluster",
                   "type": "string"
                 }
               ]

@@ -7,6 +7,21 @@ every code, every node's metacluster, and all 3,000 `cluster_id` / `metacluster_
 (`tests/r_parity.rs`, 10×10 map, `nclust = 5`, `scale = TRUE`). The clustering itself is
 [`flowsom-rs`](https://github.com/tercen/flowsom-rs) 0.1.2.
 
+## 0.1.2: one relation, and a test that can see a join
+
+`0.1.1` emitted a second `Map` relation joined on nothing. Against a crosstab that is a cartesian
+product, and every event came back carrying all hundred rows of the map — colouring by
+metacluster coloured nothing. Nothing in `cargo test` could have seen it: every test stopped at
+the bytes the operator writes, and the join happens afterwards, inside Tercen.
+
+Fixed by emitting one per-cell relation, as `phenograph_operator` and the R `flowsom_operator`
+do. Verified through a Studio run on the R fixture: the assembled relation has 3,000 rows, one
+per cell, and all 3,000 `cluster_id` / `metacluster_id` labels match the R operator's.
+`tests/test.json` now carries that as the platform's own unit test, with the expected files
+taken from that run after their content was checked against R.
+
+The same `[]` join declares `asinh_rust_operator`'s Cofactors table in `auto` mode. Being checked.
+
 ## Measured on a Studio dev run (2026-09-21)
 
 | projection | wall | peak RSS |

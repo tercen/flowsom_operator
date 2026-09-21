@@ -187,7 +187,10 @@ fn the_spec_declares_the_columns_the_writer_writes() {
     let joins = spec["operatorSpec"]["outputSpecsV2"][0]["joinOperators"]
         .as_array()
         .expect("outputSpecsV2[0].joinOperators");
-    assert_eq!(joins.len(), 2, "the per-cell table and the map");
+    // One relation. A second one joined on nothing is a cross join: 0.1.1 shipped the map that
+    // way and every event came back carrying every row of it, so colouring by metacluster
+    // coloured nothing. phenograph_operator and the R flowsom_operator both emit one table.
+    assert_eq!(joins.len(), 1, "one per-cell relation, and no second one");
 
     let names = |j: &serde_json::Value| -> Vec<String> {
         j["rightRelation"]["attributes"]
@@ -198,19 +201,22 @@ fn the_spec_declares_the_columns_the_writer_writes() {
             .collect()
     };
     assert_eq!(names(&joins[0]), ["cluster_id", "metacluster_id"]);
-    assert_eq!(names(&joins[1]), ["node", "metacluster"]);
-    // The per-cell table is one row per column of the crosstab, so it joins on Column alone.
-    assert_eq!(
-        joins[0]["leftPair"]["lColumns"].as_array().unwrap(),
-        &vec![serde_json::json!("Column")]
-    );
-    // The map is standalone: it has one row per node and joins on nothing.
-    assert!(
-        joins[1]["leftPair"]["lColumns"]
-            .as_array()
-            .unwrap()
-            .is_empty()
-    );
+    // One row per observation, joined on the observation factor — the name phenograph and the
+    // R flowsom_operator both use, and the name this spec gives its column MetaFactor.
+    for side in ["lColumns", "rColumns"] {
+        assert_eq!(
+            joins[0]["leftPair"][side].as_array().unwrap(),
+            &vec![serde_json::json!("Observation")],
+            "{side}"
+        );
+    }
+    let obs = spec["operatorSpec"]["inputSpecs"][0]["metaFactors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|m| m["ontologyMapping"] == "observation")
+        .expect("an observation MetaFactor");
+    assert_eq!(obs["name"], "Observation", "the join names this factor");
 }
 
 /// Every property the code reads must be declared, or a user cannot set it; and the defaults

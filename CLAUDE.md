@@ -41,6 +41,18 @@ declare.
   ConsensusClusterPlus with no seed, so R reseeds from the clock. There is therefore no fixture
   for the whole `maxMeta` path, only for its parts.
 
+## A second relation joined on nothing is a cross join
+
+`0.1.1` shipped a `Map` table with `lColumns: [] / rColumns: []`, copied from `read_fcs`. There
+it is right: an import operator has no input crosstab, so an unkeyed relation is just a separate
+table. Here the left side is every cell, so an empty key is a cartesian product and every event
+carries every row of the map. `phenograph_operator` emits one table; so does the R FlowSOM
+operator; so does this one now.
+
+No unit test could have caught it — the join happens inside Tercen, after the operator's bytes.
+The platform's `OperatorUnitTest` (`tests/test.json`) can, because it diffs the assembled
+relations. Every operator that returns anything to a crosstab needs one.
+
 ## The operatorSpec vocabulary is fixed, and inventing a kind fails at install
 
 `0.1.0` shipped with `JoinSpec`, `RelationSpec` and `AttributeSpec` in `outputSpecsV2`. All three

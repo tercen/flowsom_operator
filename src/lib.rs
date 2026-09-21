@@ -177,8 +177,13 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
             .with_context(|| format!("create {}", result_path.display()))?;
         let w = std::io::BufWriter::with_capacity(4 << 20, pagecache::Releasing::new(f, 256 << 20));
         let mut w = TsonWriter::new(w)?;
-        output::write_cells(&mut w, ctx.namespace(), &fsom.node, &metacluster)?;
-        output::write_map(&mut w, &channels, &fsom.codes, ncodes, &fsom.metaclustering)?;
+        output::write_cells(
+            &mut w,
+            &table_name(ctx),
+            ctx.namespace(),
+            &fsom.node,
+            &metacluster,
+        )?;
         output::write_footer(&mut w)?;
     }
     let bytes = std::fs::metadata(&result_path)?.len();
@@ -266,6 +271,10 @@ impl Drop for TempDirGuard {
     fn drop(&mut self) {
         let _ = std::fs::remove_dir_all(&self.0);
     }
+}
+
+fn table_name(ctx: &ContextBase) -> String {
+    format!("{}_{}", ctx.step_id(), ctx.qt_hash())
 }
 
 fn peak_rss_kb() -> Option<u64> {

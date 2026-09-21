@@ -7,7 +7,7 @@ bit — without the R runtime.
 | | |
 |---|---|
 | projection | rows = channels, columns = cells, y = value |
-| output | one row per cell: `cluster_id` (SOM node) and `metacluster_id`, plus a `Map` table |
+| output | one row per cell: `cluster_id` (SOM node) and `metacluster_id` — one table, as phenograph and the R operator emit |
 | image | `ghcr.io/tercen/flowsom_rust_operator` |
 
 ## Properties
@@ -32,7 +32,15 @@ The clustering lives in [`flowsom-rs`](https://github.com/tercen/flowsom-rs), wh
 FlowSOM 1.22.0 on R 4.0.4 bit for bit — R's random stream, `hclust`'s tie-breaking, and
 ConsensusClusterPlus's hundred resamples included.
 
-This repository tests the **operator's** pipeline, not only the crate's: `tests/r_parity.rs`
+Two layers. `tests/test.json` is the platform's own `OperatorUnitTest`: it projects
+`flowsom_golden_long.csv` (channels on rows, cells on columns), runs the operator with
+`nclust = 5` on a 10×10 map, and diffs the **assembled relations** — `table1.csv` is the per-cell
+result, `table2.csv` the column table, `table3.csv` the row table. Its expected labels were
+checked against the R operator's on the same data before they were committed: 3,000 of 3,000
+`cluster_id` and `metacluster_id` agree. This is the test that sees a join, which nothing in
+`cargo test` can.
+
+`tests/r_parity.rs` tests the **operator's** pipeline, not only the crate's: `tests/r_parity.rs`
 takes the same synthetic data through the three steps in the order the operator does them and
 compares with what the R operator emits. On 3,000 cells and a 10×10 map it agrees on every code,
 every node's metacluster, and all 3,000 `cluster_id` / `metacluster_id` strings.
@@ -61,9 +69,10 @@ hidden in a subsample.
 
 - **`mst` above 1.** FlowSOM then retrains on distances taken from a minimum spanning tree of the
   codes. Not ported; the operator refuses rather than silently ignoring it.
-- **The serialised FlowSOM model.** A Rust operator cannot write an R object. The `Map` table
-  carries the same information in a form anything can read: one row per node, its metacluster,
-  and its codes.
+- **The serialised FlowSOM model.** A Rust operator cannot write an R object, and it is not
+  replaced by a second table either: `0.1.1` shipped a `Map` relation joined on nothing, which
+  against a crosstab is a cartesian product — every event came back carrying every row of it.
+  One relation, per cell, is the shape that works.
 - **A negative seed.** See `seed` above.
 
 ## Licence
