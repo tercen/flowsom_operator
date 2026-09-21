@@ -121,11 +121,21 @@ pub fn write_cells<W: Write>(
     // rejects anything else with "expected type as LSTSTR,LSTU8, …".
     let node_width = label_width(node.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[0], n)?;
-    w.str_list(&node.iter().map(|v| label(*v, node_width)).collect::<Vec<_>>())?;
+    w.str_list(
+        &node
+            .iter()
+            .map(|v| label(*v, node_width))
+            .collect::<Vec<_>>(),
+    )?;
 
     let meta_width = label_width(metacluster.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[1], n)?;
-    w.str_list(&metacluster.iter().map(|v| label(*v, meta_width)).collect::<Vec<_>>())?;
+    w.str_list(
+        &metacluster
+            .iter()
+            .map(|v| label(*v, meta_width))
+            .collect::<Vec<_>>(),
+    )?;
 
     write_column_header(w, &cols[2], n)?;
     w.i32_list(&(0..n as i32).collect::<Vec<_>>())?;
@@ -180,11 +190,20 @@ pub fn write_map<W: Write>(
 
     let node_width = label_width(ncodes);
     write_column_header(w, &cols[0], ncodes)?;
-    w.str_list(&(1..=ncodes).map(|i| label(i, node_width)).collect::<Vec<_>>())?;
+    w.str_list(
+        &(1..=ncodes)
+            .map(|i| label(i, node_width))
+            .collect::<Vec<_>>(),
+    )?;
 
     let meta_width = label_width(metaclustering.iter().copied().max().unwrap_or(1));
     write_column_header(w, &cols[1], ncodes)?;
-    w.str_list(&metaclustering.iter().map(|v| label(*v, meta_width)).collect::<Vec<_>>())?;
+    w.str_list(
+        &metaclustering
+            .iter()
+            .map(|v| label(*v, meta_width))
+            .collect::<Vec<_>>(),
+    )?;
 
     for j in 0..p {
         write_column_header(w, &cols[2 + j], ncodes)?;
