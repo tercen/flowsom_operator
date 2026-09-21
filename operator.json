@@ -1,0 +1,189 @@
+{
+  "name": "FlowSOM (Rust)",
+  "description": "Clusters flow cytometry data with a self-organising map and consensus metaclustering. A drop-in for the R FlowSOM operator, bit-identical to it, without the R runtime.",
+  "tags": [
+    "cytometry",
+    "clustering",
+    "flowsom",
+    "rust"
+  ],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/flowsom_rust_operator"
+  ],
+  "communicationProtocol": "grpc",
+  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.0",
+  "properties": [
+    {
+      "kind": "StringProperty",
+      "name": "nclust",
+      "defaultValue": "NULL",
+      "description": "Number of metaclusters. Leave as NULL to let maxMeta choose. Setting this is the reproducible choice and the faster one."
+    },
+    {
+      "kind": "StringProperty",
+      "name": "maxMeta",
+      "defaultValue": "NULL",
+      "description": "Largest number of metaclusters to consider; FlowSOM picks the elbow of the within-cluster sum of squares. Ignored when nclust is set. If neither is set, 10 is used."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "seed",
+      "defaultValue": 42,
+      "description": "Seed for the random draws that build and metacluster the map. Must be non-negative: the same seed gives the same clusters, which is what makes a workflow re-runnable."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "xdim",
+      "defaultValue": 10,
+      "description": "Width of the SOM grid."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "ydim",
+      "defaultValue": 10,
+      "description": "Height of the SOM grid."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "rlen",
+      "defaultValue": 10,
+      "description": "Passes over the data while training the map."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "mst",
+      "defaultValue": 1,
+      "description": "Training rounds. Only 1 is supported; above that FlowSOM retrains on distances from a minimum spanning tree of the codes, which is not ported."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "alpha_1",
+      "defaultValue": 0.05,
+      "description": "Learning rate at the start of training."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "alpha_2",
+      "defaultValue": 0.01,
+      "description": "Learning rate at the end of training."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "distf",
+      "defaultValue": 2,
+      "description": "Distance: 1 Manhattan, 2 Euclidean, 3 Chebyshev, 4 cosine. FlowSOM's default is 2."
+    },
+    {
+      "kind": "BooleanProperty",
+      "name": "scale",
+      "defaultValue": true,
+      "description": "Centre each channel and divide by its standard deviation before training, which is what FlowSOM does by default and what the R operator inherits. Turn it off when the channels are already on a common scale, as after an asinh transform with per-channel cofactors."
+    }
+  ],
+  "operatorSpec": {
+    "kind": "OperatorSpec",
+    "ontologyUri": "https://tercen.com/_ontology/tercen",
+    "ontologyVersion": "0.0.1",
+    "inputSpecs": [
+      {
+        "kind": "CrosstabSpec",
+        "metaFactors": [
+          {
+            "kind": "MetaFactor",
+            "name": "Variable",
+            "type": "",
+            "description": "Channel identifiers",
+            "ontologyMapping": "variable",
+            "crosstabMapping": "row",
+            "cardinality": "1..n",
+            "factors": []
+          },
+          {
+            "kind": "MetaFactor",
+            "name": "Observation",
+            "type": "",
+            "description": "Cell identifiers",
+            "ontologyMapping": "observation",
+            "crosstabMapping": "column",
+            "cardinality": "1..n",
+            "factors": []
+          }
+        ],
+        "axis": [
+          {
+            "kind": "AxisSpec",
+            "metaFactors": [
+              {
+                "kind": "MetaFactor",
+                "name": "Measurement",
+                "type": "numeric",
+                "description": "Channel value",
+                "ontologyMapping": "measurement",
+                "crosstabMapping": "y",
+                "cardinality": "1",
+                "factors": []
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputSpecsV2": [
+      {
+        "kind": "ConditionalJoinSpec",
+        "alternatives": [
+          {
+            "kind": "JoinSpec",
+            "getPredictedAttributes": true,
+            "hasDynamicOutput": false,
+            "relationSpecs": [
+              {
+                "kind": "RelationSpec",
+                "name": "cells",
+                "description": "One row per cell: its node and its metacluster",
+                "allowAdditionalAttributes": false,
+                "attributes": [
+                  {
+                    "kind": "AttributeSpec",
+                    "name": "cluster_id",
+                    "type": "string",
+                    "description": "SOM node, zero padded"
+                  },
+                  {
+                    "kind": "AttributeSpec",
+                    "name": "metacluster_id",
+                    "type": "string",
+                    "description": "Metacluster, zero padded"
+                  }
+                ]
+              },
+              {
+                "kind": "RelationSpec",
+                "name": "Map",
+                "description": "One row per node: its metacluster and its codes",
+                "allowAdditionalAttributes": true,
+                "attributes": [
+                  {
+                    "kind": "AttributeSpec",
+                    "name": "node",
+                    "type": "string",
+                    "description": "SOM node, zero padded"
+                  },
+                  {
+                    "kind": "AttributeSpec",
+                    "name": "metacluster",
+                    "type": "string",
+                    "description": "Metacluster it belongs to"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
