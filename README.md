@@ -49,7 +49,7 @@ ConsensusClusterPlus's hundred resamples included.
 Two layers. `tests/test.json` is the platform's own `OperatorUnitTest`: it projects
 `flowsom_golden_long.csv` (channels on rows, cells on columns), runs the operator with
 `nclust = 5` on a 10×10 map, and diffs the **assembled relations** — `table1.csv` is the per-cell
-result, `table2.csv` the column table, `table3.csv` the row table. Its expected labels were
+result, `table2.csv` the column table (a `.ci`-keyed result joins the column table only, so two relations). Its expected labels were
 checked against the R operator's on the same data before they were committed: 3,000 of 3,000
 `cluster_id` and `metacluster_id` agree. This is the test that sees a join, which nothing in
 `cargo test` can.
