@@ -25,6 +25,20 @@ The R operator's names, unchanged, so a workflow can swap one step for the other
 | `alpha_1`, `alpha_2` | 0.05, 0.01 | Learning rate at the start and the end. |
 | `distf` | 2 | 1 Manhattan, 2 Euclidean, 3 Chebyshev, 4 cosine. |
 | `scale` | true | Centre each channel and divide by its standard deviation. `FlowSOM()`'s own default, which the R operator inherits by not passing anything. Turn it off when the channels are already comparable, as after an asinh transform with per-channel cofactors. |
+| `train_factor` | "" | Name of a column factor (label) in the projection. Empty: train on every cell. Set: train the map only on the cells whose label equals `train_value`, then map every cell to its nearest node — R's `FlowSOM()` on the subset followed by `NewData()` on the rest. |
+| `train_value` | Train | The label that marks training cells. |
+| `train_cells` | 0 | Cap on the number of training cells, drawn at random with `seed`. 0: use them all. cytonormpy's `run_clustering(n_cells=6000)` is `train_cells = 6000`. |
+
+## Training on a subset
+
+CytoNorm clusters on the pooled reference samples and then assigns every sample's cells to those
+clusters. With the reference/other split as a column factor, `train_factor = <that factor>` and
+`train_value = <reference label>` do it in one step: channels are centred and scaled with the
+**training** cells' centre and standard deviation (as `NewData` scales with the trained map's
+`scaled.center` / `scaled.scale`), the map is trained on those cells, and every cell is assigned to
+its nearest node and that node's metacluster. `tests/flowsom_train.json` is the platform test for
+this mode; `tests/r_parity.rs::train_on_a_subset_and_map_all_matches_newdata` checks it against
+`FlowSOM(train) + NewData(all)` from FlowSOM 1.22.0 on all 3,000 cells.
 
 ## Parity
 

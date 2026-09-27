@@ -1,11 +1,27 @@
-# flowsom_rust_operator — status, 2026-09-21
+# flowsom_rust_operator — status, 2026-09-27
 
 ## Where it got to
 
 A drop-in for the R `flowsom_operator`, agreeing with it bit for bit on the reference data:
 every code, every node's metacluster, and all 3,000 `cluster_id` / `metacluster_id` strings
 (`tests/r_parity.rs`, 10×10 map, `nclust = 5`, `scale = TRUE`). The clustering itself is
-[`flowsom-rs`](https://github.com/tercen/flowsom-rs) 0.1.2.
+[`flowsom-rs`](https://github.com/tercen/flowsom-rs) 0.1.3.
+
+## 0.1.3: train on a subset, map all (2026-09-27)
+
+CytoNorm needs FlowSOM trained on the pooled reference samples with every sample's cells then
+assigned to that map. Three properties: `train_factor` (a column factor of the projection),
+`train_value` (the label of the training cells, default `Train`) and `train_cells` (a seeded cap
+on how many, 0 = all; cytonormpy uses 6,000). Scaling is taken from the training cells only and
+applied to everyone, which is what `NewData()` does with `scaled.center` / `scaled.scale`.
+`flowsom-rs` 0.1.3 exposes that split (`column_scaling` / `scale_columns_with`).
+
+Golden: `fixtures/gen_train.R` on the same FlowSOM 1.22.0 image, training on every fifth of the
+3,000 reference cells (600) and mapping all; 87 of 100 nodes used, 5 metaclusters. The parity
+test matches all 3,000 nodes and metaclusters and the scaling parameters to 1e-12. Second
+platform test `tests/flowsom_train.json` on a long table with a `type` column (Train/Test).
+
+Without `train_factor` the operator is unchanged, and `tests/test.json` still passes.
 
 ## 0.1.2: one relation, and a test that can see a join
 

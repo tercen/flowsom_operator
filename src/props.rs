@@ -37,6 +37,15 @@ pub struct Settings {
     /// every channel is centred and divided by its standard deviation. Matching that is the
     /// point of the default here.
     pub scale: bool,
+    /// `train_factor`: a column factor naming which cells train the map; empty trains on every
+    /// cell (the R operator's behaviour). With it set, the map is trained on the cells whose
+    /// value is `train_value` — CytoNorm's batch controls, typically — and every cell is then
+    /// assigned to the trained map, as `FlowSOM::NewData` does.
+    pub train_factor: String,
+    pub train_value: String,
+    /// `train_cells`: at most this many training cells, a seeded draw from the matching ones;
+    /// 0 uses all of them. cytonormpy's `run_clustering(n_cells = 6000)`.
+    pub train_cells: usize,
 }
 
 impl Default for Settings {
@@ -52,6 +61,9 @@ impl Default for Settings {
             alpha: (0.05, 0.01),
             distf: Dist::Euclidean,
             scale: true,
+            train_factor: String::new(),
+            train_value: "Train".to_string(),
+            train_cells: 0,
         }
     }
 }
@@ -138,6 +150,16 @@ pub fn read(ctx: &ContextBase) -> Result<Settings> {
         alpha: (num("alpha_1", d.alpha.0)?, num("alpha_2", d.alpha.1)?),
         distf,
         scale: pr.get_string("scale", "true").trim().to_lowercase() != "false",
+        train_factor: pr.get_string("train_factor", "").trim().to_string(),
+        train_value: {
+            let v = pr.get_string("train_value", "").trim().to_string();
+            if v.is_empty() {
+                d.train_value.clone()
+            } else {
+                v
+            }
+        },
+        train_cells: num("train_cells", 0.0)?.max(0.0) as usize,
     };
     tracing::info!(?s, "properties");
     Ok(s)

@@ -262,3 +262,74 @@ fn the_manifest_matches_the_code() {
         assert_eq!(p["defaultValue"], "NULL", "{name}");
     }
 }
+
+/// `train_factor`: the map trained on every fifth cell and every cell mapped to it must be what
+/// FlowSOM 1.22.0 gives for `FlowSOM(train rows)` + `NewData(all rows)` — node and metacluster
+/// per cell, and the scaling parameters the new cells are scaled with (`fsom$scaled.center`,
+/// `$scaled.scale`). Golden: `fixtures/gen_train.R`, same image as the other fixtures.
+#[test]
+fn train_on_a_subset_and_map_all_matches_newdata() {
+    let (raw, n, p) = read_matrix("som_input.csv");
+    let wide: Vec<f64> = raw.iter().map(|v| *v as f32 as f64).collect();
+    let train: Vec<usize> = (0..n).filter(|i| i % 5 == 0).collect();
+    assert_eq!(train.len(), 600);
+
+    // Scaling parameters of the training cells, as R stores them on the trained map.
+    let train_wide = {
+        let m = train.len();
+        let mut out = vec![0.0; m * p];
+        for c in 0..p {
+            for (k, &r) in train.iter().enumerate() {
+                out[c * m + k] = wide[c * n + r];
+            }
+        }
+        out
+    };
+    let (center, scale) = metacluster::column_scaling(&train_wide, train.len(), p);
+    let (sc, _) = read_strings("op_scaling_train.csv");
+    for c in 0..p {
+        let r_center: f64 = sc[c][0].parse().unwrap();
+        let r_scale: f64 = sc[c][1].parse().unwrap();
+        assert!(
+            (center[c] - r_center).abs() <= 1e-12,
+            "center[{c}] {} vs R {r_center}",
+            center[c]
+        );
+        assert!(
+            (scale[c] - r_scale).abs() <= 1e-12,
+            "scale[{c}] {} vs R {r_scale}",
+            scale[c]
+        );
+    }
+
+    let params = Params {
+        xdim: 10,
+        ydim: 10,
+        clusters: Clusters::Fixed(5),
+        rlen: 10,
+        seed: 42,
+    };
+    let fitted = flowsom_operator::fit_and_assign(wide, n, p, Some(&train), true, &params);
+    let (cells, nr) = read_strings("op_cells_train.csv");
+    assert_eq!(nr, n);
+    let label = |s: &str| -> usize { s.trim_start_matches('c').parse().unwrap() };
+    let mut node_mismatch = 0;
+    let mut meta_mismatch = 0;
+    for (i, (node, meta)) in fitted.node.iter().zip(&fitted.metacluster).enumerate() {
+        if *node != label(&cells[0][i]) {
+            node_mismatch += 1;
+        }
+        if *meta != label(&cells[1][i]) {
+            meta_mismatch += 1;
+        }
+    }
+    assert_eq!(
+        node_mismatch, 0,
+        "nodes differ from R's NewData on {node_mismatch} of {n} cells"
+    );
+    assert_eq!(
+        meta_mismatch, 0,
+        "metaclusters differ from R's NewData on {meta_mismatch} of {n} cells"
+    );
+    assert_eq!(fitted.n_metaclusters, 5);
+}

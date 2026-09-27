@@ -29,6 +29,20 @@ declare.
 3. **Everything in `flowsom-rs`**: R's Mersenne-Twister and rejection sampler, `hclust`'s scan
    order, and the integer `abs` in FlowSOM's C. See that repository.
 
+## Train mode and its fixture
+
+`train_factor` / `train_value` / `train_cells` train on a labelled subset and map every cell, R's
+`FlowSOM(subset)` then `NewData(all)`. Scaling parameters come from the training cells alone
+(`flowsom::metacluster::column_scaling` on the training rows, `scale_columns_with` on all).
+Goldens for this come from `fixtures/gen_train.R`, run in the same image as the others —
+the image's entrypoint is the R operator, so override it:
+
+```
+docker run --rm -v "$PWD/fixtures:/w" -w /w --entrypoint Rscript lucas501/cytonorm_docker:1.1.9 gen_train.R
+```
+
+Never regenerate goldens with a local R: FlowSOM 2.x is not bit-compatible with 1.22.0.
+
 ## Deliberate differences from the R operator
 
 - A **negative seed** is refused. The R operator reads it as "use a random seed", which makes

@@ -134,6 +134,28 @@ pub async fn row_labels(ctx: &ContextBase) -> Result<Vec<String>> {
     column_as_strings(&bytes, &name)
 }
 
+/// The values of one column factor, one per column (cell). `wanted` names the factor; it must
+/// be projected on the columns.
+pub async fn column_labels(ctx: &ContextBase, wanted: &str) -> Result<Vec<String>> {
+    let names = ctx
+        .cnames()
+        .await
+        .map_err(|e| anyhow!("read column factor names: {e}"))?;
+    let name = names
+        .iter()
+        .find(|n| n.as_str() == wanted || n.ends_with(&format!(".{wanted}")))
+        .cloned()
+        .ok_or_else(|| {
+            anyhow!("column factor '{wanted}' is not projected (columns are {names:?})")
+        })?;
+    let bytes = ctx
+        .streamer()
+        .stream_tson(ctx.column_hash(), Some(vec![name.clone()]), 0, -1)
+        .await
+        .map_err(|e| anyhow!("read column factor '{name}': {e}"))?;
+    column_as_strings(&bytes, &name)
+}
+
 /// A group index per column: the sample each event belongs to.
 ///
 /// `wanted` names the column factor to group by; empty takes the first, as the R operator does.

@@ -1,0 +1,56 @@
+{
+  "kind": "OperatorUnitTest",
+  "name": "flowsom_train_on_type_nclust5_10x10",
+  "namespace": "ds0",
+  "inputDataUri": "flowsom_train_long.csv",
+  "outputDataUri": [
+    "table1_train.csv",
+    "table2_train.csv"
+  ],
+  "columns": [
+    "cell_id",
+    "type"
+  ],
+  "rows": [
+    "channel"
+  ],
+  "colors": [],
+  "labels": [],
+  "yAxis": "value",
+  "xAxis": "",
+  "generatedOn": "09/27/2026 07:00:00 PM 2026",
+  "version": "",
+  "propertyValues": [
+    {
+      "kind": "PropertyValue",
+      "name": "nclust",
+      "value": "5"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "xdim",
+      "value": "10"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "ydim",
+      "value": "10"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "seed",
+      "value": "42"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "train_factor",
+      "value": "type"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "train_value",
+      "value": "Train"
+    }
+  ],
+  "absTol": 1e-09
+}

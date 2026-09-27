@@ -14,7 +14,7 @@
     "https://github.com/tercen/flowsom_rust_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.2",
+  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.3",
   "properties": [
     {
       "kind": "StringProperty",
@@ -81,6 +81,24 @@
       "name": "scale",
       "defaultValue": true,
       "description": "Centre each channel and divide by its standard deviation before training, which is what FlowSOM does by default and what the R operator inherits. Turn it off when the channels are already on a common scale, as after an asinh transform with per-channel cofactors."
+    },
+    {
+      "kind": "StringProperty",
+      "name": "train_factor",
+      "defaultValue": "",
+      "description": "Column factor naming which cells train the map. Empty trains on every cell, as the R operator does. Set it (with train_value) to train on a subset \u2014 CytoNorm's batch controls \u2014 and assign every cell to that map, as FlowSOM's NewData does."
+    },
+    {
+      "kind": "StringProperty",
+      "name": "train_value",
+      "defaultValue": "Train",
+      "description": "Value of train_factor that marks a training cell. The CytoNorm operators use Train."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "train_cells",
+      "defaultValue": 0,
+      "description": "At most this many training cells, a seeded draw from the matching ones; 0 uses all of them. cytonormpy trains its FlowSOM on 6000 reference cells."
     }
   ],
   "operatorSpec": {

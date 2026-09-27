@@ -124,16 +124,63 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
         );
     }
 
+    // Which cells train the map. Empty `train_factor` = every cell, the R operator's behaviour;
+    // otherwise the cells whose factor value is `train_value` (CytoNorm's batch controls), at most
+    // `train_cells` of them by a seeded draw, and every cell is assigned to that map afterwards.
+    let train: Option<Vec<usize>> = if s.train_factor.is_empty() {
+        None
+    } else {
+        let labels = input::column_labels(ctx, &s.train_factor).await?;
+        if labels.len() != n_cells {
+            anyhow::bail!(
+                "column factor '{}' has {} values for {n_cells} cells",
+                s.train_factor,
+                labels.len()
+            );
+        }
+        let mut idx: Vec<usize> = (0..n_cells)
+            .filter(|&i| labels[i] == s.train_value)
+            .collect();
+        if idx.is_empty() {
+            anyhow::bail!(
+                "no cell has {} = '{}'; the values present are {:?}",
+                s.train_factor,
+                s.train_value,
+                {
+                    let mut v: Vec<&String> = labels.iter().collect();
+                    v.sort();
+                    v.dedup();
+                    v.into_iter().take(8).cloned().collect::<Vec<_>>()
+                }
+            );
+        }
+        let n_matching = idx.len();
+        if s.train_cells > 0 && idx.len() > s.train_cells {
+            idx = draw(&idx, s.train_cells, s.seed as u64);
+        }
+        if idx.len() < ncodes {
+            anyhow::bail!(
+                "{} training cells ({} = '{}'{}) for a map of {ncodes} nodes; a map needs at least \
+                 one cell per node. Use a smaller xdim/ydim or more training cells.",
+                idx.len(),
+                s.train_factor,
+                s.train_value,
+                if s.train_cells > 0 {
+                    format!(", train_cells {}", s.train_cells)
+                } else {
+                    String::new()
+                }
+            );
+        }
+        tracing::info!(n_matching, n_train = idx.len(), "training subset");
+        Some(idx)
+    };
+
     rep.at(0, "Reading the crosstab");
     let data = gather(ctx, n_values, n_cells, p, &rep).await?;
     // Widen once, then free the narrow copy: the peak is 12 bytes a value, not 12 twice over.
-    let mut wide: Vec<f64> = data.iter().map(|v| *v as f64).collect();
+    let wide: Vec<f64> = data.iter().map(|v| *v as f64).collect();
     drop(data);
-    if s.scale {
-        // `FlowSOM(scale = TRUE)`, which the R operator gets by not passing anything. It runs
-        // after the f32 rounding, as `ReadInput` does, and in double precision.
-        flowsom::metacluster::scale_columns(&mut wide, n_cells, p);
-    }
 
     rep.at(progress::FIT.0, "Training the map");
     let t = Instant::now();
@@ -147,20 +194,27 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
         rlen: s.rlen,
         seed: s.seed,
     };
-    let fsom = flowsom::flowsom::fit(&wide, n_cells, p, &params);
-    let n_meta = fsom.metaclustering.iter().copied().max().unwrap_or(0);
+    let fitted = fit_and_assign(wide, n_cells, p, train.as_deref(), s.scale, &params);
+    let n_meta = fitted.n_metaclusters;
     tracing::info!(
         secs = format!("{:.1}", t.elapsed().as_secs_f64()),
         nodes = ncodes,
         metaclusters = n_meta,
         "map trained"
     );
-    rep.info(format!(
-        "FlowSOM: {n_cells} cells x {p} channels into {ncodes} nodes and {n_meta} metaclusters"
-    ));
-
-    let metacluster = fsom.metacluster_of(&wide, n_cells, p);
-    drop(wide);
+    rep.info(match &train {
+        None => format!(
+            "FlowSOM: {n_cells} cells x {p} channels into {ncodes} nodes and {n_meta} metaclusters"
+        ),
+        Some(idx) => format!(
+            "FlowSOM: map trained on {} cells ({} = '{}') x {p} channels into {ncodes} nodes and \
+             {n_meta} metaclusters; all {n_cells} cells assigned to it",
+            idx.len(),
+            s.train_factor,
+            s.train_value
+        ),
+    });
+    let (node, metacluster) = (fitted.node, fitted.metacluster);
 
     rep.at(progress::WRITE.0, "Writing the result");
     let work_root = std::env::temp_dir().join(format!(
@@ -181,7 +235,7 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
             &mut w,
             &table_name(ctx),
             ctx.namespace(),
-            &fsom.node,
+            &node,
             &metacluster,
         )?;
         output::write_footer(&mut w)?;
@@ -264,6 +318,94 @@ async fn gather(
         );
     }
     Ok(data)
+}
+
+/// A trained map applied to every cell.
+pub struct Fitted {
+    /// SOM node of every cell (1-based, as FlowSOM numbers them).
+    pub node: Vec<usize>,
+    /// Metacluster of every cell (1-based).
+    pub metacluster: Vec<usize>,
+    pub n_metaclusters: usize,
+}
+
+/// Train the map and assign every cell. `wide` is column-major (`n` cells per channel, `p`
+/// channels). With `train` = `None` this is `FlowSOM(scale = scale)` on all cells. With a
+/// subset it is what R does for `NewData`: the scaling is computed on the training cells and
+/// applied to everyone, the map is trained on the (scaled) training cells, and every cell is
+/// mapped to its nearest code and that code's metacluster.
+pub fn fit_and_assign(
+    mut wide: Vec<f64>,
+    n: usize,
+    p: usize,
+    train: Option<&[usize]>,
+    scale: bool,
+    params: &flowsom::flowsom::Params,
+) -> Fitted {
+    let (fit_data, n_fit): (Vec<f64>, usize) = match train {
+        None => {
+            if scale {
+                flowsom::metacluster::scale_columns(&mut wide, n, p);
+            }
+            (wide.clone(), n)
+        }
+        Some(idx) => {
+            if scale {
+                let raw_train = take_rows(&wide, n, p, idx);
+                let (center, sd) = flowsom::metacluster::column_scaling(&raw_train, idx.len(), p);
+                flowsom::metacluster::scale_columns_with(&mut wide, n, p, &center, &sd);
+            }
+            (take_rows(&wide, n, p, idx), idx.len())
+        }
+    };
+    let fsom = flowsom::flowsom::fit(&fit_data, n_fit, p, params);
+    drop(fit_data);
+    let n_metaclusters = fsom.metaclustering.iter().copied().max().unwrap_or(0);
+    let metacluster = fsom.metacluster_of(&wide, n, p);
+    let node: Vec<usize> = match train {
+        None => fsom.node,
+        Some(_) => flowsom::som::map_data_to_codes(
+            &wide,
+            &fsom.codes,
+            n,
+            p,
+            fsom.ncodes(),
+            flowsom::som::Dist::Euclidean,
+        )
+        .iter()
+        .map(|m| m.node)
+        .collect(),
+    };
+    Fitted {
+        node,
+        metacluster,
+        n_metaclusters,
+    }
+}
+
+/// Rows `idx` of a column-major `n × p` matrix, as a column-major `idx.len() × p` matrix.
+fn take_rows(wide: &[f64], n: usize, p: usize, idx: &[usize]) -> Vec<f64> {
+    let m = idx.len();
+    let mut out = vec![0.0; m * p];
+    for c in 0..p {
+        for (k, &r) in idx.iter().enumerate() {
+            out[c * m + k] = wide[c * n + r];
+        }
+    }
+    out
+}
+
+/// A seeded draw of `k` of `idx`, sorted. ChaCha8 on the operator seed, so the same seed gives
+/// the same training cells run after run.
+fn draw(idx: &[usize], k: usize, seed: u64) -> Vec<usize> {
+    use rand::SeedableRng;
+    use rand::seq::SliceRandom;
+    let mut v = idx.to_vec();
+    let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(seed ^ 0x005e_ed0f_f10a_504d);
+    v.shuffle(&mut rng);
+    v.truncate(k);
+    v.sort_unstable();
+    v
 }
 
 struct TempDirGuard(std::path::PathBuf);

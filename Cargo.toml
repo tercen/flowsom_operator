@@ -1,6 +1,6 @@
 [package]
 name = "flowsom_operator"
-version = "0.1.0"
+version = "0.1.3"
 edition = "2024"
 description = "FlowSOM clustering for Tercen (Rust), bit-identical to the R operator it replaces"
 # GPL-2.0-only, not "or later": the metaclustering comes from `flowsom`, which is a port of
@@ -25,7 +25,7 @@ thiserror = "1"
 tercen-rs = { git = "https://github.com/tercen/tercen-rs", branch = "main" }
 # Pinned to a tag, not a branch: the clusters this returns are the operator's output and must
 # not move under a rebuild.
-flowsom = { git = "https://github.com/tercen/flowsom-rs", tag = "0.1.2" }
+flowsom = { git = "https://github.com/tercen/flowsom-rs", tag = "0.1.3" }
 tokio = { version = "1.49", features = ["rt-multi-thread", "macros", "time"] }
 tonic = "0.14"
 futures = "0.3"
@@ -33,6 +33,8 @@ rustson = { git = "https://github.com/tercen/rustson", branch = "master" }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tikv-jemallocator = "0.6"
+rand = "0.8"
+rand_chacha = "0.3"
 
 [dev-dependencies]
 tempfile = "3"
