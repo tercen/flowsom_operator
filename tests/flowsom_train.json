@@ -50,6 +50,11 @@
       "kind": "PropertyValue",
       "name": "train_value",
       "value": "Train"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "scale",
+      "value": "true"
     }
   ],
   "absTol": 1e-09

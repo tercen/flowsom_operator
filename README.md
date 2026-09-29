@@ -24,7 +24,7 @@ The R operator's names, unchanged, so a workflow can swap one step for the other
 | `mst` | 1 | Only 1 is supported — see below. |
 | `alpha_1`, `alpha_2` | 0.05, 0.01 | Learning rate at the start and the end. |
 | `distf` | 2 | 1 Manhattan, 2 Euclidean, 3 Chebyshev, 4 cosine. |
-| `scale` | true | Centre each channel and divide by its standard deviation. `FlowSOM()`'s own default, which the R operator inherits by not passing anything. Turn it off when the channels are already comparable, as after an asinh transform with per-channel cofactors. |
+| `scale` | **false** (since 0.1.4) | Centre each channel and divide by its standard deviation before training. FlowSOM 1.22 did this by default and the R operator inherits it; FlowSOM 2.x and the Python port do not. On asinh-transformed data with per-channel cofactors, scaling gives dim state markers the weight of bright lineage markers: against a reference clustering of the same cells it cost 0.2 of ARI. Set `true` to reproduce the R operator. |
 | `train_factor` | "" | Name of a column factor (label) in the projection. Empty: train on every cell. Set: train the map only on the cells whose label equals `train_value`, then map every cell to its nearest node — R's `FlowSOM()` on the subset followed by `NewData()` on the rest. |
 | `train_value` | Train | The label that marks training cells. |
 | `train_cells` | 0 | Cap on the number of training cells, drawn at random with `seed`. 0: use them all. cytonormpy's `run_clustering(n_cells=6000)` is `train_cells = 6000`. |

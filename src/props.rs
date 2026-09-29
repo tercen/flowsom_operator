@@ -33,9 +33,10 @@ pub struct Settings {
     pub mst: usize,
     pub alpha: (f64, f64),
     pub distf: Dist,
-    /// `scale`. The R operator does not pass it, so it gets `FlowSOM()`'s default of TRUE and
-    /// every channel is centred and divided by its standard deviation. Matching that is the
-    /// point of the default here.
+    /// `scale`. Off by default since 0.1.4. FlowSOM 1.22's `FlowSOM()` defaulted to TRUE (which
+    /// the R operator inherited by not passing it), but FlowSOM 2.x and the Python port do not
+    /// scale, and on an asinh-transformed panel unit-variance scaling gives every dim state
+    /// marker the weight of CD3: measured against a reference clustering it cost 0.2 of ARI.
     pub scale: bool,
     /// `train_factor`: a column factor naming which cells train the map; empty trains on every
     /// cell (the R operator's behaviour). With it set, the map is trained on the cells whose
@@ -60,7 +61,7 @@ impl Default for Settings {
             mst: 1,
             alpha: (0.05, 0.01),
             distf: Dist::Euclidean,
-            scale: true,
+            scale: false,
             train_factor: String::new(),
             train_value: "Train".to_string(),
             train_cells: 0,
@@ -149,7 +150,7 @@ pub fn read(ctx: &ContextBase) -> Result<Settings> {
         mst,
         alpha: (num("alpha_1", d.alpha.0)?, num("alpha_2", d.alpha.1)?),
         distf,
-        scale: pr.get_string("scale", "true").trim().to_lowercase() != "false",
+        scale: pr.get_string("scale", "false").trim().to_lowercase() == "true",
         train_factor: pr.get_string("train_factor", "").trim().to_string(),
         train_value: {
             let v = pr.get_string("train_value", "").trim().to_string();
@@ -170,15 +171,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn defaults_match_the_r_operator() {
+    fn defaults_match_the_r_operator_except_scale() {
         let d = Settings::default();
         assert_eq!(d.clusters, Clusters::UpTo(10));
         assert_eq!((d.xdim, d.ydim, d.rlen, d.mst), (10, 10, 10, 1));
         assert_eq!(d.alpha, (0.05, 0.01));
         assert_eq!(d.distf, Dist::Euclidean);
         assert!(
-            d.scale,
-            "FlowSOM()'s own default, which the R operator does not override"
+            !d.scale,
+            "off since 0.1.4: FlowSOM 2.x and the Python port do not scale; 1.22 did"
         );
     }
 }

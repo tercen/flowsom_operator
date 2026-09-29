@@ -39,6 +39,11 @@
       "kind": "PropertyValue",
       "name": "seed",
       "value": "42"
+    },
+    {
+      "kind": "PropertyValue",
+      "name": "scale",
+      "value": "true"
     }
   ],
   "absTol": 1e-09

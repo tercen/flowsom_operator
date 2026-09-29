@@ -7,6 +7,15 @@ every code, every node's metacluster, and all 3,000 `cluster_id` / `metacluster_
 (`tests/r_parity.rs`, 10×10 map, `nclust = 5`, `scale = TRUE`). The clustering itself is
 [`flowsom-rs`](https://github.com/tercen/flowsom-rs) 0.1.3.
 
+## 0.1.4: `scale` defaults to false (2026-09-29)
+
+The R operator inherits FlowSOM 1.22's `scale = TRUE`; FlowSOM 2.x and the Python `flowsom` package
+never scale. Reproducing a Python-FlowSOM clustering on Tercen showed what scaling costs on an
+asinh-transformed panel: same cells, same map, same k, ARI against the reference 0.938 unscaled vs 0.727
+scaled with the lineage markers, and 0.879 vs 0.575 with all markers. Default flipped; the platform tests
+pin `scale = true` explicitly so their goldens (made with 1.22 semantics) stay valid; pass `scale = true`
+to reproduce the R operator.
+
 ## 0.1.3: train on a subset, map all (2026-09-27)
 
 CytoNorm needs FlowSOM trained on the pooled reference samples with every sample's cells then

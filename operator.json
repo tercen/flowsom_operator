@@ -14,7 +14,7 @@
     "https://github.com/tercen/flowsom_rust_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.3",
+  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.4",
   "properties": [
     {
       "kind": "StringProperty",
@@ -79,8 +79,8 @@
     {
       "kind": "BooleanProperty",
       "name": "scale",
-      "defaultValue": true,
-      "description": "Centre each channel and divide by its standard deviation before training, which is what FlowSOM does by default and what the R operator inherits. Turn it off when the channels are already on a common scale, as after an asinh transform with per-channel cofactors."
+      "defaultValue": false,
+      "description": "Centre each channel and divide by its standard deviation before training. Off by default: FlowSOM 2.x and the Python FlowSOM do not scale, and on asinh-transformed data with per-channel cofactors scaling gives dim markers the weight of bright lineage markers. FlowSOM 1.22 (and the R operator, which inherits its default) scaled; set true to reproduce those."
     },
     {
       "kind": "StringProperty",
