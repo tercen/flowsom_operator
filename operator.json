@@ -1,17 +1,16 @@
 {
-  "name": "FlowSOM (Rust)",
-  "description": "Clusters flow cytometry data with a self-organising map and consensus metaclustering. A drop-in for the R FlowSOM operator, bit-identical to it, without the R runtime.",
+  "name": "FlowSOM",
+  "description": "Clusters flow cytometry data with a self-organising map and consensus metaclustering (FlowSOM). Version 2 is a Rust implementation without the R runtime; on the 1.x unit test it gives the same cluster and metacluster for every cell.",
   "tags": [
     "cytometry",
     "clustering",
-    "flowsom",
-    "rust"
+    "flowsom"
   ],
   "authors": [
     "tercen"
   ],
   "urls": [
-    "https://github.com/tercen/flowsom_rust_operator"
+    "https://github.com/tercen/flowsom_operator"
   ],
   "communicationProtocol": "grpc",
   "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.4",

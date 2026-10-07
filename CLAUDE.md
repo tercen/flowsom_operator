@@ -1,4 +1,4 @@
-# flowsom_rust_operator — notes for whoever works on this next
+# flowsom_operator (Rust, 2.x) — notes for whoever works on this next
 
 Built 2026-09-21 with the `create-rust-operator` skill. Read `README.md` first; this is the
 part that is not obvious from the code.

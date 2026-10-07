@@ -1,14 +1,29 @@
-# flowsom_rust_operator
+# flowsom_operator
 
-FlowSOM clustering for Tercen, in Rust. A **drop-in for the R `flowsom_operator`**: the same
-projection, the same property names, the same output columns, and the same clusters — bit for
-bit — without the R runtime.
+FlowSOM clustering for Tercen. **Version 2 is a Rust implementation** that replaces the R one
+(1.x, kept on the [`r-legacy`](https://github.com/tercen/flowsom_operator/tree/r-legacy) branch and
+the `r-legacy-1.7.0` tag). Same projection, same property names, same output columns, and on the
+1.x unit test the same cluster and metacluster for every cell — without the R runtime. It was
+developed as `tercen/flowsom_rust_operator` and merged here with its history.
+
+## Changes from 1.x
+
+- **No serialized R model.** 1.x also wrote a second table holding the R `FlowSOM` object
+  (`flowsom_model`, `.base64.serialized.r.model`). 2.0 writes only the per-cell labels.
+- **`seed` must be non-negative.** 1.x treated a negative seed as "random"; 2.0 refuses it.
+- **`mst` must be 1**, and **`distf`** is honoured as in FlowSOM.
+- **New properties:** `scale` (default false, which is what 1.x did: its runtime ships FlowSOM
+  2.x, which does not scale) and `train_factor` / `train_value` / `train_cells` for training on a
+  subset of cells (CytoNorm's reference cells).
+- **Same answer:** `tests/r_operator_test_1.rs` runs 1.x's own unit test (crabs, 200 cells × 5
+  channels, seed 42) and gets 1.x's labels for every cell.
+- **gRPC operator**, static image of a few MB; needs a Tercen server with gRPC operator support.
 
 | | |
 |---|---|
 | projection | rows = channels, columns = cells, y = value |
 | output | one row per cell: `cluster_id` (SOM node) and `metacluster_id` — one table, as phenograph and the R operator emit |
-| image | `ghcr.io/tercen/flowsom_rust_operator` |
+| image | `ghcr.io/tercen/flowsom_operator` (2.x); 1.x was `tercen/flowsom_operator` on Docker Hub |
 
 ## Properties
 
@@ -24,7 +39,7 @@ The R operator's names, unchanged, so a workflow can swap one step for the other
 | `mst` | 1 | Only 1 is supported — see below. |
 | `alpha_1`, `alpha_2` | 0.05, 0.01 | Learning rate at the start and the end. |
 | `distf` | 2 | 1 Manhattan, 2 Euclidean, 3 Chebyshev, 4 cosine. |
-| `scale` | **false** (since 0.1.4) | Centre each channel and divide by its standard deviation before training. FlowSOM 1.22 did this by default and the R operator inherits it; FlowSOM 2.x and the Python port do not. On asinh-transformed data with per-channel cofactors, scaling gives dim state markers the weight of bright lineage markers: against a reference clustering of the same cells it cost 0.2 of ARI. Set `true` to reproduce the R operator. |
+| `scale` | **false** (since 0.1.4) | Centre each channel and divide by its standard deviation before training. FlowSOM 1.22 did this by default; FlowSOM 2.x, the Python port and the R operator 1.x (whose runtime ships FlowSOM 2.x) do not. On asinh-transformed data with per-channel cofactors, scaling gives dim state markers the weight of bright lineage markers: against a reference clustering of the same cells it cost 0.2 of ARI. Leave it false to reproduce the R operator 1.x; set `true` to reproduce FlowSOM 1.22 (the R CytoNorm image). |
 | `train_factor` | "" | Name of a column factor (label) in the projection. Empty: train on every cell. Set: train the map only on the cells whose label equals `train_value`, then map every cell to its nearest node — R's `FlowSOM()` on the subset followed by `NewData()` on the rest. |
 | `train_value` | Train | The label that marks training cells. |
 | `train_cells` | 0 | Cap on the number of training cells, drawn at random with `seed`. 0: use them all. cytonormpy's `run_clustering(n_cells=6000)` is `train_cells = 6000`. |

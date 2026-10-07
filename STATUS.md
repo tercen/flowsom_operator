@@ -1,4 +1,4 @@
-# flowsom_rust_operator — status, 2026-09-27
+# flowsom_operator (Rust, 2.x; developed as tercen/flowsom_rust_operator) — status, 2026-09-27
 
 ## Where it got to
 

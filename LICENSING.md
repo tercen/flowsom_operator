@@ -1,6 +1,6 @@
 # Licensing
 
-`flowsom_rust_operator` is **GPL-2.0-only**, and that is forced, not chosen.
+`flowsom_operator` 2.x is **GPL-2.0-only** (1.x, the R implementation on the `r-legacy` branch, carried no licence), and that is forced, not chosen.
 
 The metaclustering comes from [`flowsom-rs`](https://github.com/tercen/flowsom-rs), which ports
 ConsensusClusterPlus. ConsensusClusterPlus is licensed **"GPL version 2"** with no "or later"
