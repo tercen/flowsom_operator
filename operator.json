@@ -1,0 +1,188 @@
+{
+  "name": "FlowSOM (Rust)",
+  "description": "Clusters flow cytometry data with a self-organising map and consensus metaclustering. A drop-in for the R FlowSOM operator, bit-identical to it, without the R runtime.",
+  "tags": [
+    "cytometry",
+    "clustering",
+    "flowsom",
+    "rust"
+  ],
+  "authors": [
+    "tercen"
+  ],
+  "urls": [
+    "https://github.com/tercen/flowsom_rust_operator"
+  ],
+  "communicationProtocol": "grpc",
+  "container": "ghcr.io/tercen/flowsom_rust_operator:0.1.4",
+  "properties": [
+    {
+      "kind": "StringProperty",
+      "name": "nclust",
+      "defaultValue": "NULL",
+      "description": "Number of metaclusters. Leave as NULL to let maxMeta choose. Setting this is the reproducible choice and the faster one."
+    },
+    {
+      "kind": "StringProperty",
+      "name": "maxMeta",
+      "defaultValue": "NULL",
+      "description": "Largest number of metaclusters to consider; FlowSOM picks the elbow of the within-cluster sum of squares. Ignored when nclust is set. If neither is set, 10 is used."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "seed",
+      "defaultValue": 42,
+      "description": "Seed for the random draws that build and metacluster the map. Must be non-negative: the same seed gives the same clusters, which is what makes a workflow re-runnable."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "xdim",
+      "defaultValue": 10,
+      "description": "Width of the SOM grid."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "ydim",
+      "defaultValue": 10,
+      "description": "Height of the SOM grid."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "rlen",
+      "defaultValue": 10,
+      "description": "Passes over the data while training the map."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "mst",
+      "defaultValue": 1,
+      "description": "Training rounds. Only 1 is supported; above that FlowSOM retrains on distances from a minimum spanning tree of the codes, which is not ported."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "alpha_1",
+      "defaultValue": 0.05,
+      "description": "Learning rate at the start of training."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "alpha_2",
+      "defaultValue": 0.01,
+      "description": "Learning rate at the end of training."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "distf",
+      "defaultValue": 2,
+      "description": "Distance: 1 Manhattan, 2 Euclidean, 3 Chebyshev, 4 cosine. FlowSOM's default is 2."
+    },
+    {
+      "kind": "BooleanProperty",
+      "name": "scale",
+      "defaultValue": false,
+      "description": "Centre each channel and divide by its standard deviation before training. Off by default: FlowSOM 2.x and the Python FlowSOM do not scale, and on asinh-transformed data with per-channel cofactors scaling gives dim markers the weight of bright lineage markers. FlowSOM 1.22 (and the R operator, which inherits its default) scaled; set true to reproduce those."
+    },
+    {
+      "kind": "StringProperty",
+      "name": "train_factor",
+      "defaultValue": "",
+      "description": "Column factor naming which cells train the map. Empty trains on every cell, as the R operator does. Set it (with train_value) to train on a subset \u2014 CytoNorm's batch controls \u2014 and assign every cell to that map, as FlowSOM's NewData does."
+    },
+    {
+      "kind": "StringProperty",
+      "name": "train_value",
+      "defaultValue": "Train",
+      "description": "Value of train_factor that marks a training cell. The CytoNorm operators use Train."
+    },
+    {
+      "kind": "DoubleProperty",
+      "name": "train_cells",
+      "defaultValue": 0,
+      "description": "At most this many training cells, a seeded draw from the matching ones; 0 uses all of them. cytonormpy trains its FlowSOM on 6000 reference cells."
+    }
+  ],
+  "operatorSpec": {
+    "kind": "OperatorSpec",
+    "ontologyUri": "https://tercen.com/_ontology/tercen",
+    "ontologyVersion": "0.0.1",
+    "inputSpecs": [
+      {
+        "kind": "CrosstabSpec",
+        "metaFactors": [
+          {
+            "kind": "MetaFactor",
+            "name": "Variable",
+            "type": "",
+            "description": "Channel (or variable) name.",
+            "ontologyMapping": "variable",
+            "crosstabMapping": "row",
+            "cardinality": "0..n",
+            "factors": []
+          },
+          {
+            "kind": "MetaFactor",
+            "name": "Observation",
+            "type": "",
+            "description": "Cell, event or observation identifier. Every cell needs a value for every channel: the map clusters whole cells.",
+            "ontologyMapping": "observation",
+            "crosstabMapping": "column",
+            "cardinality": "0..n",
+            "factors": []
+          }
+        ],
+        "axis": [
+          {
+            "kind": "AxisSpec",
+            "metaFactors": [
+              {
+                "kind": "MetaFactor",
+                "name": "Measurement",
+                "type": "double",
+                "description": "Values to cluster",
+                "ontologyMapping": "measurement",
+                "crosstabMapping": "y",
+                "cardinality": "1",
+                "factors": []
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "outputSpecsV2": [
+      {
+        "kind": "OperatorJoinSpec",
+        "joinOperators": [
+          {
+            "kind": "JoinOperator",
+            "joinType": "left",
+            "leftPair": {
+              "kind": "ColumnPair",
+              "lColumns": [
+                "Observation"
+              ],
+              "rColumns": [
+                "Observation"
+              ]
+            },
+            "rightRelation": {
+              "kind": "TableRelation",
+              "attributes": [
+                {
+                  "kind": "Attribute",
+                  "name": "cluster_id",
+                  "type": "string"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "metacluster_id",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
