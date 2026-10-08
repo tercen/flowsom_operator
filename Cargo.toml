@@ -1,6 +1,6 @@
 [package]
 name = "flowsom_operator"
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 description = "FlowSOM clustering for Tercen (Rust), bit-identical to the R operator it replaces"
 # GPL-2.0-only, not "or later": the metaclustering comes from `flowsom`, which is a port of

@@ -22,7 +22,7 @@ developed as `tercen/flowsom_rust_operator` and merged here with its history.
 | | |
 |---|---|
 | projection | rows = channels, columns = cells, y = value |
-| output | one row per cell: `cluster_id` (SOM node) and `metacluster_id` — one table, as phenograph and the R operator emit |
+| output | one row per cell: `cluster_id` (SOM node), `metacluster_id`, and since 2.1.0 `som_x`/`som_y` (the node's column and row on the SOM grid, 1-based, FlowSOM's `expand.grid` layout, for grid plots) — one table, as phenograph and the R operator emit |
 | image | `ghcr.io/tercen/flowsom_operator` (2.x); 1.x was `tercen/flowsom_operator` on Docker Hub |
 
 ## Properties
