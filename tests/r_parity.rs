@@ -200,7 +200,10 @@ fn the_spec_declares_the_columns_the_writer_writes() {
             .map(|a| a["name"].as_str().unwrap().to_string())
             .collect()
     };
-    assert_eq!(names(&joins[0]), ["cluster_id", "metacluster_id"]);
+    assert_eq!(
+        names(&joins[0]),
+        ["cluster_id", "metacluster_id", "som_x", "som_y"]
+    );
     // One row per observation, joined on the observation factor — the name phenograph and the
     // R flowsom_operator both use, and the name this spec gives its column MetaFactor.
     for side in ["lColumns", "rColumns"] {

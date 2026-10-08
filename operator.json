@@ -13,7 +13,7 @@
     "https://github.com/tercen/flowsom_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/flowsom_operator:2.0.0",
+  "container": "ghcr.io/tercen/flowsom_operator:2.1.0",
   "properties": [
     {
       "kind": "StringProperty",
@@ -176,6 +176,16 @@
                   "kind": "Attribute",
                   "name": "metacluster_id",
                   "type": "string"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "som_x",
+                  "type": "double"
+                },
+                {
+                  "kind": "Attribute",
+                  "name": "som_y",
+                  "type": "double"
                 }
               ]
             }

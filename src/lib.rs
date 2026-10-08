@@ -237,6 +237,7 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
             ctx.namespace(),
             &node,
             &metacluster,
+            s.xdim,
         )?;
         output::write_footer(&mut w)?;
     }

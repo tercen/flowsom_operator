@@ -97,10 +97,13 @@ pub fn write_cells<W: Write>(
     namespace: &str,
     node: &[usize],
     metacluster: &[usize],
+    xdim: usize,
 ) -> Result<()> {
     let n = node.len();
     let cluster_name = format!("{namespace}.cluster_id");
     let meta_name = format!("{namespace}.metacluster_id");
+    let x_name = format!("{namespace}.som_x");
+    let y_name = format!("{namespace}.som_y");
     let cols = [
         ColSpec {
             name: &cluster_name,
@@ -109,6 +112,14 @@ pub fn write_cells<W: Write>(
         ColSpec {
             name: &meta_name,
             ty: "string",
+        },
+        ColSpec {
+            name: &x_name,
+            ty: "double",
+        },
+        ColSpec {
+            name: &y_name,
+            ty: "double",
         },
         ColSpec {
             name: ".ci",
@@ -140,9 +151,24 @@ pub fn write_cells<W: Write>(
             .collect::<Vec<_>>(),
     )?;
 
+    // The node's place on the SOM grid, 1-based, laid out as FlowSOM's `expand.grid(1:xdim,
+    // 1:ydim)`: node k is at column (k-1) % xdim + 1, row (k-1) / xdim + 1. For grid plots.
+    let (gx, gy) = grid_xy(node, xdim);
     write_column_header(w, &cols[2], n)?;
+    w.f64_list(&gx)?;
+    write_column_header(w, &cols[3], n)?;
+    w.f64_list(&gy)?;
+
+    write_column_header(w, &cols[4], n)?;
     w.i32_list(&(0..n as i32).collect::<Vec<_>>())?;
     Ok(())
+}
+
+/// Grid column and row (1-based) of each 1-based node on an `xdim`-wide map.
+pub fn grid_xy(node: &[usize], xdim: usize) -> (Vec<f64>, Vec<f64>) {
+    node.iter()
+        .map(|&k| (((k - 1) % xdim + 1) as f64, ((k - 1) / xdim + 1) as f64))
+        .unzip()
 }
 
 /// Close the result. One relation, so no joins to declare.
@@ -156,6 +182,13 @@ pub fn write_footer<W: Write>(w: &mut TsonWriter<W>) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn grid_positions_follow_expand_grid() {
+        let (x, y) = grid_xy(&[1, 10, 11, 100], 10);
+        assert_eq!(x, vec![1.0, 10.0, 1.0, 10.0]);
+        assert_eq!(y, vec![1.0, 1.0, 2.0, 10.0]);
+    }
 
     #[test]
     fn labels_are_zero_padded_to_the_widest() {
