@@ -5,7 +5,9 @@
   "inputDataUri": "flowsom_golden_long.csv",
   "outputDataUri": [
     "table1.csv",
-    "table2.csv"
+    "table2.csv",
+    "table3.csv",
+    "table4.csv"
   ],
   "columns": [
     "cell_id"

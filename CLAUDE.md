@@ -48,9 +48,11 @@ Never regenerate goldens with a local R: FlowSOM 2.x is not bit-compatible with 
 - A **negative seed** is refused. The R operator reads it as "use a random seed", which makes
   the step unrepeatable.
 - **`mst > 1`** is refused rather than ignored.
-- The **serialised FlowSOM model** is replaced by a `Map` table — one row per node, its
-  metacluster and its codes — because a Rust operator cannot write an R object, and because a
-  table is readable by anything.
+- The **serialised FlowSOM model** (an R object) is replaced, since 2.2, by a JSON model on
+  every channel row (`flowsom_model`, keyed by `.ri`): codes, node medians and counts,
+  metaclustering, scaling. `src/model.rs` documents the format; `flowsom_tree_operator` reads
+  it. Medians golden: `fixtures/gen_model.R`. serde_json needs `float_roundtrip` or reading the
+  codes back is 1 ulp off.
 - **`maxMeta` is reproducible here and is not in R**: `FlowSOM:::consensus` calls
   ConsensusClusterPlus with no seed, so R reseeds from the clock. There is therefore no fixture
   for the whole `maxMeta` path, only for its parts.
