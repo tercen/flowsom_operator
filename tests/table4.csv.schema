@@ -3,13 +3,8 @@
   "columns": [
     {
       "kind": "ColumnSchema",
-      "name": "ds0.flowsom_model",
+      "name": "channel",
       "type": "string"
-    },
-    {
-      "kind": "ColumnSchema",
-      "name": ".ri",
-      "type": "int32"
     }
   ]
 }

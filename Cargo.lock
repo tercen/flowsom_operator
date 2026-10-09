@@ -624,7 +624,7 @@ source = "git+https://github.com/tercen/flowsom-rs?tag=0.1.3#c5645b2a1cbc2fc445e
 
 [[package]]
 name = "flowsom_operator"
-version = "2.2.0"
+version = "2.2.1"
 dependencies = [
  "anyhow",
  "flowsom",
