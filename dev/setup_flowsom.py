@@ -13,6 +13,8 @@ tok = os.environ["TERCEN_TOKEN"]
 wf_id, schema_id = sys.argv[1], sys.argv[2]
 props = dict(a.split("=", 1) for a in sys.argv[3:])
 ROW, COL, Y = "channel", "cell_id", "value"
+# Extra column factors, e.g. EXTRA_COLS=type:string for the train-mode test.
+EXTRA = [tuple(x.split(":")) for x in os.environ.get("EXTRA_COLS", "").split(",") if x]
 
 c = TercenClient(os.environ.get("TERCEN_HTTP", "http://127.0.0.1:5402"))
 c.userService.tercenClient.token = tok
@@ -47,7 +49,7 @@ ds.inputs = [ip]; ds.outputs = [dop]; ds.rectangle = rect(100.0, 250.0)
 ds.state = m.StepState(); ds.state.taskId = ""; ds.state.taskState = m.InitState()
 ct = m.Crosstab(); ct.taskId = ""
 ct.axis = m.XYAxisList(); ct.axis.rectangleSelections = []; ct.axis.xyAxis = []
-ct.columnTable = ctable([gf(COL, "double")])
+ct.columnTable = ctable([gf(COL, "double")] + [gf(n, t) for n, t in EXTRA])
 ct.rowTable = ctable([gf(ROW, "string")])
 ct.filters = m.Filters(); ct.filters.removeNaN = False; ct.filters.namedFilters = []
 st = m.OperatorSettings(); st.namespace = "ds0"; st.environment = []
@@ -72,7 +74,7 @@ wf = c.workflowService.get(wf_id)
 ds = next(s for s in wf.steps if s.id == ds.id)
 q = m.CubeQuery()
 q.relation = ts.model.relation
-q.colColumns = [factor(COL, "double")]
+q.colColumns = [factor(COL, "double")] + [factor(n, t) for n, t in EXTRA]
 q.rowColumns = [factor(ROW, "string")]
 aq = m.CubeAxisQuery(); aq.chartType = "point"; aq.pointSize = 4
 aq.xAxis = factor("", "string"); aq.yAxis = factor(Y, "double")

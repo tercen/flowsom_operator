@@ -187,11 +187,23 @@ fn the_spec_declares_the_columns_the_writer_writes() {
     let joins = spec["operatorSpec"]["outputSpecsV2"][0]["joinOperators"]
         .as_array()
         .expect("outputSpecsV2[0].joinOperators");
-    // One relation. A second one joined on nothing is a cross join: 0.1.1 shipped the map that
-    // way and every event came back carrying every row of it, so colouring by metacluster
-    // coloured nothing. phenograph_operator and the R flowsom_operator both emit one table.
-    assert_eq!(joins.len(), 1, "one per-cell relation, and no second one");
-
+    // The per-cell relation, and the model keyed by channel. Never a relation joined on nothing:
+    // 0.1.1 shipped the map that way and every event came back carrying every row of it.
+    assert_eq!(joins.len(), 2, "per-cell relation and per-channel model");
+    for j in joins {
+        assert!(
+            !j["leftPair"]["lColumns"].as_array().unwrap().is_empty(),
+            "an empty join key is a cross join"
+        );
+    }
+    assert_eq!(
+        joins[1]["leftPair"]["lColumns"],
+        serde_json::json!(["Variable"])
+    );
+    assert_eq!(
+        joins[1]["rightRelation"]["attributes"][0]["name"],
+        "flowsom_model"
+    );
     let names = |j: &serde_json::Value| -> Vec<String> {
         j["rightRelation"]["attributes"]
             .as_array()
@@ -335,4 +347,87 @@ fn train_on_a_subset_and_map_all_matches_newdata() {
         "metaclusters differ from R's NewData on {meta_mismatch} of {n} cells"
     );
     assert_eq!(fitted.n_metaclusters, 5);
+}
+
+/// The model the operator writes (2.2.0) must be FlowSOM's own map: the codes bit for bit, and
+/// the node medians and counts `fsom$map$medianValues` (scaling undone) and `mapping` give.
+/// Golden: `fixtures/gen_model.R`, same image and map as `gen_operator.R`.
+#[test]
+fn the_model_is_flowsoms_map() {
+    let (raw, n, p) = read_matrix("som_input.csv");
+    let wide: Vec<f64> = raw.iter().map(|v| *v as f32 as f64).collect();
+    let params = Params {
+        xdim: 10,
+        ydim: 10,
+        clusters: Clusters::Fixed(5),
+        rlen: 10,
+        seed: 42,
+    };
+    let fitted = flowsom_operator::fit_and_assign(wide, n, p, None, true, &params);
+    let markers: Vec<String> = (1..=p).map(|i| format!("m{i}")).collect();
+    let counts = flowsom_operator::model::counts(&fitted.node, 100);
+    let (c, sd) = fitted
+        .scaling
+        .as_ref()
+        .expect("scale = true keeps its scaling");
+    let json = flowsom_operator::model::Model {
+        xdim: 10,
+        ydim: 10,
+        markers: &markers,
+        codes: &fitted.codes,
+        metaclustering: &fitted.metaclustering,
+        counts: &counts,
+        medians: &fitted.medians,
+        scaling: Some((c, sd)),
+        seed: 42,
+        rlen: 10,
+        n_cells: n,
+        n_train: n,
+    }
+    .to_json();
+    let m: serde_json::Value = serde_json::from_str(&json).unwrap();
+
+    let (want_codes, ncodes, _) = read_matrix("op_codes.csv");
+    for k in 0..ncodes {
+        for j in 0..p {
+            let got = m["codes"][k][j].as_f64().unwrap();
+            assert_eq!(
+                got.to_bits(),
+                want_codes[k + j * ncodes].to_bits(),
+                "code of node {k}, channel {j}"
+            );
+        }
+    }
+    let (want_meta, _, _) = read_matrix("op_metaclustering.csv");
+    for k in 0..ncodes {
+        assert_eq!(m["metaclustering"][k].as_f64().unwrap(), want_meta[k]);
+    }
+
+    let (med, rows) = read_strings("op_medians.csv");
+    assert_eq!(rows, ncodes);
+    let mut empty = 0;
+    for k in 0..ncodes {
+        let want_count: usize = med[p][k].parse().unwrap();
+        assert_eq!(
+            m["counts"][k].as_u64().unwrap() as usize,
+            want_count,
+            "count of node {k}"
+        );
+        if want_count == 0 {
+            empty += 1;
+            assert!(m["medians"][k].is_null(), "node {k} is empty");
+            continue;
+        }
+        for j in 0..p {
+            let want: f64 = med[j][k].parse().unwrap();
+            let got = m["medians"][k][j].as_f64().unwrap();
+            // R takes the median of the scaled values and the test unscales it in R's order;
+            // the operator does the same in its own. A few ulp, not a different median.
+            assert!(
+                (got - want).abs() <= 1e-12 * want.abs().max(1.0),
+                "median of node {k}, channel {j}: {got} vs R {want}"
+            );
+        }
+    }
+    assert_eq!(empty, 14, "the fixture map has 14 empty nodes");
 }

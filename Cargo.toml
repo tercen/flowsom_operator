@@ -1,6 +1,6 @@
 [package]
 name = "flowsom_operator"
-version = "2.1.0"
+version = "2.2.0"
 edition = "2024"
 description = "FlowSOM clustering for Tercen (Rust), bit-identical to the R operator it replaces"
 # GPL-2.0-only, not "or later": the metaclustering comes from `flowsom`, which is a port of
@@ -35,10 +35,11 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tikv-jemallocator = "0.6"
 rand = "0.8"
 rand_chacha = "0.3"
+# The model output (2.2.0) is a JSON document.
+serde_json = { version = "1", features = ["float_roundtrip"] }
 
 [dev-dependencies]
 tempfile = "3"
-serde_json = "1"
 
 [profile.release]
 opt-level = 3

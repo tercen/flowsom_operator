@@ -5,7 +5,9 @@
   "inputDataUri": "flowsom_train_long.csv",
   "outputDataUri": [
     "table1_train.csv",
-    "table2_train.csv"
+    "table2_train.csv",
+    "table3_train.csv",
+    "table4_train.csv"
   ],
   "columns": [
     "cell_id",

@@ -1,7 +1,8 @@
 //! flowsom_operator — FlowSOM clustering for Tercen, as a drop-in for the R operator.
 //!
 //! Rows are channels, columns are cells, y is the value. The result is one row per cell with
-//! its SOM node and its metacluster, plus a table describing the map.
+//! its SOM node and its metacluster, plus the trained map as JSON on every channel row
+//! ([`model`]), which the FlowSOM tree operator draws.
 //!
 //! **The shape of the problem is a transpose.** The crosstab arrives as scattered
 //! `(.ri, .ci, .y)` triples and a map needs each cell's whole vector across channels. There is
@@ -14,6 +15,7 @@
 //! One pass to gather, one map, one assignment, one write.
 pub mod context;
 pub mod input;
+pub mod model;
 pub mod output;
 pub mod pagecache;
 pub mod progress;
@@ -214,6 +216,26 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
             s.train_value
         ),
     });
+    let counts = model::counts(&fitted.node, ncodes);
+    let model_json = model::Model {
+        xdim: s.xdim,
+        ydim: s.ydim,
+        markers: &channels,
+        codes: &fitted.codes,
+        metaclustering: &fitted.metaclustering,
+        counts: &counts,
+        medians: &fitted.medians,
+        scaling: fitted
+            .scaling
+            .as_ref()
+            .map(|(c, sd)| (c.as_slice(), sd.as_slice())),
+        seed: s.seed,
+        rlen: s.rlen,
+        n_cells,
+        n_train: train.as_ref().map_or(n_cells, |t| t.len()),
+    }
+    .to_json();
+    tracing::info!(bytes = model_json.len(), "model");
     let (node, metacluster) = (fitted.node, fitted.metacluster);
 
     rep.at(progress::WRITE.0, "Writing the result");
@@ -238,7 +260,9 @@ async fn execute(ctx: &ContextBase, mode: Mode) -> Result<()> {
             &node,
             &metacluster,
             s.xdim,
+            2,
         )?;
+        output::write_model(&mut w, ctx.namespace(), &model_json, p)?;
         output::write_footer(&mut w)?;
     }
     let bytes = std::fs::metadata(&result_path)?.len();
@@ -328,6 +352,15 @@ pub struct Fitted {
     /// Metacluster of every cell (1-based).
     pub metacluster: Vec<usize>,
     pub n_metaclusters: usize,
+    /// The map's codes, column-major, as `FlowSom::codes` (in the scaled space when scaling).
+    pub codes: Vec<f64>,
+    /// Metacluster of each node, 1-based.
+    pub metaclustering: Vec<usize>,
+    /// Median of each node's cells per channel, in data units (scaling undone), column-major
+    /// `ncodes x p`, NaN for an empty node.
+    pub medians: Vec<f64>,
+    /// The centre and scale applied before the map, when `scale` is on.
+    pub scaling: Option<(Vec<f64>, Vec<f64>)>,
 }
 
 /// Train the map and assign every cell. `wide` is column-major (`n` cells per channel, `p`
@@ -343,26 +376,36 @@ pub fn fit_and_assign(
     scale: bool,
     params: &flowsom::flowsom::Params,
 ) -> Fitted {
-    let (fit_data, n_fit): (Vec<f64>, usize) = match train {
+    let (fit_data, n_fit, scaling) = match train {
         None => {
-            if scale {
+            let scaling = if scale {
+                // The centre and scale are kept for the model; the map is still trained on
+                // `scale_columns`' output, the path the R parity tests pin.
+                let cs = flowsom::metacluster::column_scaling(&wide, n, p);
                 flowsom::metacluster::scale_columns(&mut wide, n, p);
-            }
-            (wide.clone(), n)
+                Some(cs)
+            } else {
+                None
+            };
+            (wide.clone(), n, scaling)
         }
         Some(idx) => {
-            if scale {
+            let scaling = if scale {
                 let raw_train = take_rows(&wide, n, p, idx);
                 let (center, sd) = flowsom::metacluster::column_scaling(&raw_train, idx.len(), p);
                 flowsom::metacluster::scale_columns_with(&mut wide, n, p, &center, &sd);
-            }
-            (take_rows(&wide, n, p, idx), idx.len())
+                Some((center, sd))
+            } else {
+                None
+            };
+            (take_rows(&wide, n, p, idx), idx.len(), scaling)
         }
     };
     let fsom = flowsom::flowsom::fit(&fit_data, n_fit, p, params);
     drop(fit_data);
     let n_metaclusters = fsom.metaclustering.iter().copied().max().unwrap_or(0);
     let metacluster = fsom.metacluster_of(&wide, n, p);
+    let ncodes = fsom.ncodes();
     let node: Vec<usize> = match train {
         None => fsom.node,
         Some(_) => flowsom::som::map_data_to_codes(
@@ -370,17 +413,28 @@ pub fn fit_and_assign(
             &fsom.codes,
             n,
             p,
-            fsom.ncodes(),
+            ncodes,
             flowsom::som::Dist::Euclidean,
         )
         .iter()
         .map(|m| m.node)
         .collect(),
     };
+    // Medians are taken in the space the map saw and the scaling undone afterwards: the median
+    // commutes with `(v - c) / s` for s > 0, so this is the median of the data itself without a
+    // second copy of the matrix.
+    let mut medians = model::node_medians(&wide, n, p, &node, ncodes);
+    if let Some((c, sd)) = &scaling {
+        model::unscale(&mut medians, ncodes, c, sd);
+    }
     Fitted {
         node,
         metacluster,
         n_metaclusters,
+        codes: fsom.codes,
+        metaclustering: fsom.metaclustering,
+        medians,
+        scaling,
     }
 }
 

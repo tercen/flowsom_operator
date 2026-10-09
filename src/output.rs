@@ -6,11 +6,11 @@
 //! labels: a downstream step colours or facets by them, and a number invites arithmetic on a
 //! cluster index. The zero padding is what makes them sort correctly in the UI.
 //!
-//! **One table, and only one.** The map used to go out as a second relation joined on nothing,
-//! which is a cross join: every event got every one of the map's rows, so colouring by
-//! metacluster coloured nothing. `phenograph_operator` and the R `flowsom_operator` both emit a
-//! single per-cell table, and that is the shape that works. The R operator's serialised model
-//! object has no Rust equivalent and is simply not produced.
+//! **Never a table joined on nothing.** The map used to go out as a second relation joined on
+//! nothing, which is a cross join: every event got every one of the map's rows, so colouring by
+//! metacluster coloured nothing. Since 2.2 the map goes out again, as the model table — but keyed
+//! by `.ri`, one row per channel, so it joins one to one with the channel rows (see
+//! [`crate::model`]).
 use std::io::Write;
 
 use anyhow::{Result, anyhow};
@@ -98,6 +98,7 @@ pub fn write_cells<W: Write>(
     node: &[usize],
     metacluster: &[usize],
     xdim: usize,
+    n_tables: usize,
 ) -> Result<()> {
     let n = node.len();
     let cluster_name = format!("{namespace}.cluster_id");
@@ -126,7 +127,7 @@ pub fn write_cells<W: Write>(
             ty: "int32",
         },
     ];
-    write_header(w, table_name, n, &cols, 1)?;
+    write_header(w, table_name, n, &cols, n_tables)?;
 
     // `str_list`, not a generic list of strings: the server reads a column as a typed list and
     // rejects anything else with "expected type as LSTSTR,LSTU8, …".
@@ -171,7 +172,53 @@ pub fn grid_xy(node: &[usize], xdim: usize) -> (Vec<f64>, Vec<f64>) {
         .unzip()
 }
 
-/// Close the result. One relation, so no joins to declare.
+/// The model table: one row per channel, keyed by `.ri`, every row holding the same JSON map
+/// (see [`crate::model`]). Keyed by `.ri` alone, so the server joins it to the channel rows one
+/// to one — never an empty key, which against a crosstab is a cross join.
+pub fn write_model<W: Write>(
+    w: &mut TsonWriter<W>,
+    namespace: &str,
+    model_json: &str,
+    n_channels: usize,
+) -> Result<()> {
+    let model_name = format!("{namespace}.flowsom_model");
+    let cols = [
+        ColSpec {
+            name: &model_name,
+            ty: "string",
+        },
+        ColSpec {
+            name: ".ri",
+            ty: "int32",
+        },
+    ];
+    let n = n_channels;
+    w.map(4)?;
+    w.key("kind")?;
+    w.str("Table")?;
+    w.key("nRows")?;
+    w.i32(n as i32)?;
+    w.key("properties")?;
+    w.map(4)?;
+    w.key("kind")?;
+    w.str("TableProperties")?;
+    w.key("name")?;
+    w.str("flowsom_model")?;
+    w.key("sortOrder")?;
+    w.list(0)?;
+    w.key("ascending")?;
+    w.bool(false)?;
+    w.key("columns")?;
+    w.list(cols.len())?;
+    write_column_header(w, &cols[0], n)?;
+    w.str_list(&vec![model_json; n])?;
+    write_column_header(w, &cols[1], n)?;
+    w.i32_list(&(0..n as i32).collect::<Vec<_>>())?;
+    Ok(())
+}
+
+/// Close the result. The tables carry their own keys (`.ci`, `.ri`), so no joins are declared:
+/// the server relates each table by those columns.
 pub fn write_footer<W: Write>(w: &mut TsonWriter<W>) -> Result<()> {
     w.key("joinOperators")?;
     w.list(0)?;

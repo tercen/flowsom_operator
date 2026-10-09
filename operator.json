@@ -1,6 +1,6 @@
 {
   "name": "FlowSOM",
-  "description": "Clusters flow cytometry data with a self-organising map and consensus metaclustering (FlowSOM). Version 2 is a Rust implementation without the R runtime; on the 1.x unit test it gives the same cluster and metacluster for every cell.",
+  "description": "Clusters flow cytometry data with a self-organising map and consensus metaclustering (FlowSOM). Version 2 is a Rust implementation without the R runtime; on the 1.x unit test it gives the same cluster and metacluster for every cell. Since 2.2 it also writes the trained map (codes, node medians and counts, metaclustering) as JSON on every channel row, for the FlowSOM tree operator to draw.",
   "tags": [
     "cytometry",
     "clustering",
@@ -13,7 +13,7 @@
     "https://github.com/tercen/flowsom_operator"
   ],
   "communicationProtocol": "grpc",
-  "container": "ghcr.io/tercen/flowsom_operator:2.1.0",
+  "container": "ghcr.io/tercen/flowsom_operator:2.2.0",
   "properties": [
     {
       "kind": "StringProperty",
@@ -186,6 +186,29 @@
                   "kind": "Attribute",
                   "name": "som_y",
                   "type": "double"
+                }
+              ]
+            }
+          },
+          {
+            "kind": "JoinOperator",
+            "joinType": "left",
+            "leftPair": {
+              "kind": "ColumnPair",
+              "lColumns": [
+                "Variable"
+              ],
+              "rColumns": [
+                "Variable"
+              ]
+            },
+            "rightRelation": {
+              "kind": "TableRelation",
+              "attributes": [
+                {
+                  "kind": "Attribute",
+                  "name": "flowsom_model",
+                  "type": "string"
                 }
               ]
             }

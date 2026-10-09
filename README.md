@@ -8,8 +8,9 @@ developed as `tercen/flowsom_rust_operator` and merged here with its history.
 
 ## Changes from 1.x
 
-- **No serialized R model.** 1.x also wrote a second table holding the R `FlowSOM` object
-  (`flowsom_model`, `.base64.serialized.r.model`). 2.0 writes only the per-cell labels.
+- **The model is JSON, not a serialized R object.** 1.x also wrote a second table holding the R
+  `FlowSOM` object (`flowsom_model`, `.base64.serialized.r.model`). 2.0 and 2.1 wrote only the
+  per-cell labels; 2.2 writes the map again as a JSON `flowsom_model` (see below).
 - **`seed` must be non-negative.** 1.x treated a negative seed as "random"; 2.0 refuses it.
 - **`mst` must be 1**, and **`distf`** is honoured as in FlowSOM.
 - **New properties:** `scale` (default false, which is what 1.x did: its runtime ships FlowSOM
@@ -22,8 +23,20 @@ developed as `tercen/flowsom_rust_operator` and merged here with its history.
 | | |
 |---|---|
 | projection | rows = channels, columns = cells, y = value |
-| output | one row per cell: `cluster_id` (SOM node), `metacluster_id`, and since 2.1.0 `som_x`/`som_y` (the node's column and row on the SOM grid, 1-based, FlowSOM's `expand.grid` layout, for grid plots) — one table, as phenograph and the R operator emit |
+| output | one row per cell: `cluster_id` (SOM node), `metacluster_id`, and since 2.1.0 `som_x`/`som_y` (the node's column and row on the SOM grid, 1-based, FlowSOM's `expand.grid` layout, for grid plots); and since 2.2.0 `flowsom_model` on every channel row (keyed by `.ri`, so it joins one to one with the rows) |
 | image | `ghcr.io/tercen/flowsom_operator` (2.x); 1.x was `tercen/flowsom_operator` on Docker Hub |
+
+## The model (2.2.0)
+
+`flowsom_model` holds the trained map as one JSON document, the same on every channel row:
+`xdim`, `ydim`, `markers` (row order), `codes` (one vector per node, full precision, in the
+trained space), `medians` (each node's cells' median per channel, in data units; `null` for an
+empty node), `counts`, `metaclustering` (1-based), `scale`/`scale_center`/`scale_sd`, and `seed`,
+`rlen`, `n_cells`, `n_train`. It is what FlowSOM's plots need and the per-cell labels cannot give:
+the tree is the minimum spanning tree of the codes, and the stars are the medians.
+[`flowsom_tree_operator`](https://github.com/tercen/flowsom_tree_operator) draws it: project
+the channel and `flowsom_model` on rows. Codes, medians and counts are tested against FlowSOM
+1.22.0 (`tests/r_parity.rs`, `fixtures/gen_model.R`).
 
 ## Properties
 
@@ -98,10 +111,9 @@ hidden in a subsample.
 
 - **`mst` above 1.** FlowSOM then retrains on distances taken from a minimum spanning tree of the
   codes. Not ported; the operator refuses rather than silently ignoring it.
-- **The serialised FlowSOM model.** A Rust operator cannot write an R object, and it is not
-  replaced by a second table either: `0.1.1` shipped a `Map` relation joined on nothing, which
+- **The serialised R FlowSOM object.** A Rust operator cannot write one; the JSON model
+  replaces it. It is keyed by `.ri`: `0.1.1` shipped a `Map` relation joined on nothing, which
   against a crosstab is a cartesian product — every event came back carrying every row of it.
-  One relation, per cell, is the shape that works.
 - **A negative seed.** See `seed` above.
 
 ## Licence
