@@ -6,8 +6,8 @@
   "outputDataUri": [
     "table1.csv",
     "table2.csv",
-    "table3.csv",
-    "table4.csv"
+    "table4.csv",
+    "table3.csv"
   ],
   "columns": [
     "cell_id"
