@@ -31,7 +31,7 @@
       "kind": "DoubleProperty",
       "name": "seed",
       "defaultValue": 42,
-      "description": "Seed for the random draws that build and metacluster the map. Must be non-negative: the same seed gives the same clusters, which is what makes a workflow re-runnable."
+      "description": "Seed for the random draws that build and metacluster the map. Negative means random: each run draws a new seed and the task log says which, so the run can be repeated by entering it. A fixed seed gives the same clusters every run."
     },
     {
       "kind": "DoubleProperty",

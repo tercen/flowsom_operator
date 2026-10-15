@@ -21,10 +21,11 @@ pub enum Clusters {
 #[derive(Debug, Clone)]
 pub struct Settings {
     pub clusters: Clusters,
-    /// `seed`. The R operator treats a negative seed as "random"; here it is always set,
-    /// because an operator that cannot be re-run to the same answer is not much use in a
-    /// workflow. A user who wants variation changes the number.
+    /// `seed` used for this run. A negative property means "random", as in the R operator: a
+    /// seed is drawn per run and `seed_random` is set so the log can name it (and the model
+    /// records it), which keeps any run repeatable by entering that seed.
     pub seed: u32,
+    pub seed_random: bool,
     pub xdim: usize,
     pub ydim: usize,
     pub rlen: usize,
@@ -55,6 +56,7 @@ impl Default for Settings {
             // `if (is.null(maxMeta) & is.null(n.clust)) maxMeta <- 10`
             clusters: Clusters::UpTo(10),
             seed: 42,
+            seed_random: false,
             xdim: 10,
             ydim: 10,
             rlen: 10,
@@ -104,18 +106,7 @@ pub fn read(ctx: &ContextBase) -> Result<Settings> {
         (None, None) => d.clusters,
     };
 
-    let seed = {
-        let v = num("seed", d.seed as f64)?;
-        if v < 0.0 {
-            // The R operator makes this a clock seed. Refuse instead of quietly producing an
-            // unrepeatable clustering: a workflow that cannot be re-run is a bug, not a feature.
-            bail!(
-                "property 'seed' is {v}; this operator needs a seed it can repeat. Use any \
-                 non-negative number."
-            );
-        }
-        v as u32
-    };
+    let (seed, seed_random) = seed_from(num("seed", d.seed as f64)?, random_seed);
 
     let dim = |name: &str, dflt: usize| -> Result<usize> {
         let v = num(name, dflt as f64)?;
@@ -144,6 +135,7 @@ pub fn read(ctx: &ContextBase) -> Result<Settings> {
     let s = Settings {
         clusters,
         seed,
+        seed_random,
         xdim: dim("xdim", d.xdim)?,
         ydim: dim("ydim", d.ydim)?,
         rlen: dim("rlen", d.rlen)?,
@@ -166,9 +158,34 @@ pub fn read(ctx: &ContextBase) -> Result<Settings> {
     Ok(s)
 }
 
+/// `seed` as the R operator reads it: a negative value means "random". A fresh seed is then
+/// drawn for this run and returned with `true`, so the caller can say which seed was used.
+fn seed_from(v: f64, draw: impl FnOnce() -> u32) -> (u32, bool) {
+    if v < 0.0 {
+        (draw(), true)
+    } else {
+        (v as u32, false)
+    }
+}
+
+/// A seed the property panel can hold exactly and a user can type back in.
+fn random_seed() -> u32 {
+    rand::random::<u32>() >> 1
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_negative_seed_means_random_and_says_so() {
+        assert_eq!(seed_from(-1.0, || 7), (7, true));
+        assert_eq!(seed_from(-3.0, || 9), (9, true));
+        assert_eq!(seed_from(0.0, || 7), (0, false));
+        assert_eq!(seed_from(123.0, || 7), (123, false));
+        // Drawn seeds fit a property value exactly, so a user can type one back in.
+        assert!((0..1000).all(|_| random_seed() <= i32::MAX as u32));
+    }
 
     #[test]
     fn defaults_match_the_r_operator_except_scale() {
