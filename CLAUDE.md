@@ -45,8 +45,9 @@ Never regenerate goldens with a local R: FlowSOM 2.x is not bit-compatible with 
 
 ## Deliberate differences from the R operator
 
-- A **negative seed** is refused. The R operator reads it as "use a random seed", which makes
-  the step unrepeatable.
+- A **negative seed** means random, as in R (it is the 1.x default every upgraded step carries):
+  a seed is drawn per run and named in the task log and the model (`seed_random`). 2.0–2.2.1
+  refused it and broke every upgraded step; mapping it silently to 42 was rejected.
 - **`mst > 1`** is refused rather than ignored.
 - The **serialised FlowSOM model** (an R object) is replaced, since 2.2, by a JSON model on
   every channel row (`flowsom_model`, keyed by `.ri`): codes, node medians and counts,

@@ -11,7 +11,9 @@ developed as `tercen/flowsom_rust_operator` and merged here with its history.
 - **The model is JSON, not a serialized R object.** 1.x also wrote a second table holding the R
   `FlowSOM` object (`flowsom_model`, `.base64.serialized.r.model`). 2.0 and 2.1 wrote only the
   per-cell labels; 2.2 writes the map again as a JSON `flowsom_model` (see below).
-- **`seed` must be non-negative.** 1.x treated a negative seed as "random"; 2.0 refuses it.
+- **A negative `seed` means random, as in 1.x** (2.0–2.2.1 refused it). Each run draws a fresh
+  seed and the task log names it (the model records it too), so a run you want to keep can be
+  repeated by setting `seed` to that number. The default is 42.
 - **`mst` must be 1**, and **`distf`** is honoured as in FlowSOM.
 - **New properties:** `scale` (default false, which is what 1.x did: its runtime ships FlowSOM
   2.x, which does not scale) and `train_factor` / `train_value` / `train_cells` for training on a
@@ -46,7 +48,7 @@ The R operator's names, unchanged, so a workflow can swap one step for the other
 |---|---|---|
 | `nclust` | NULL | Number of metaclusters. Setting it is the reproducible and the faster choice. |
 | `maxMeta` | NULL | Largest number to consider; the elbow of the within-cluster sum of squares picks one. Ignored when `nclust` is set; 10 is used if neither is. |
-| `seed` | 42 | Must be non-negative. The R operator treats a negative seed as "random"; this refuses, because a step that cannot be re-run to the same answer is a bug. |
+| `seed` | 42 | Negative = random, as in the R operator: a new seed each run, named in the task log and the model. Any non-negative seed gives the same clusters every run. |
 | `xdim`, `ydim` | 10, 10 | The SOM grid. |
 | `rlen` | 10 | Passes over the data while training. |
 | `mst` | 1 | Only 1 is supported — see below. |
@@ -114,8 +116,6 @@ hidden in a subsample.
 - **The serialised R FlowSOM object.** A Rust operator cannot write one; the JSON model
   replaces it. It is keyed by `.ri`: `0.1.1` shipped a `Map` relation joined on nothing, which
   against a crosstab is a cartesian product — every event came back carrying every row of it.
-- **A negative seed.** See `seed` above.
-
 ## Licence
 
 GPL-2.0-only. See `LICENSING.md` — it is not a free choice.
